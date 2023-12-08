@@ -22,13 +22,17 @@ The process we follow to tune LLaMa2 for a specific language is as follows:
 
 `pip install -r requirements.txt`
 
-2. Convert the Open Assistant dataset to prompt-assistant pairs.
+2. Convert the Open Assistant dataset to prompt-assistant pairs. You can optionally skip this step to use our dataset from Huggingface.
 
 `python create_pairs.py instruct.json`
 
-3. Translate to the desired target language. Replace NL with your target language and make sure the output folder `translated_instruct` exists. The output folder is used to create checkpoints as a full translate takes a lot of time.
+3. Translate to the desired target language. Replace NL with your target language and make sure the output folder `translated_instruct` exists. The output folder is used to create checkpoints as a full translate takes a lot of time. First the code checks if the input dataset exists on disk. If that fails, it tries to retrieve the dataset from Huggingface.
 
-`python translate_pairs.py instruct.json nl translated_instruct/`
+`python translate_pairs.py UnderstandLing/oasst1_instruct nl translated_instruct/ 100`
+
+or
+
+`python translate_pairs.py instruct.json nl translated_instruct/ 100`
 
 4. Fine-tune LLaMa2
 
