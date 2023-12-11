@@ -9,7 +9,7 @@ import json
 input = sys.argv[1]
 target_lang = sys.argv[2]
 checkpoint_location = sys.argv[3]
-checkpoint_n = sys.argv[4]
+checkpoint_n = int(sys.argv[4])
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
@@ -19,6 +19,10 @@ try:
 except FileNotFoundError as e:
   with open(input, 'r', encoding='utf-8') as f:
     instruct_dataset = json.load(f)
+
+# Create output folder
+if not os.path.exists(checkpoint_location):
+    os.makedirs(checkpoint_location)
 
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
@@ -89,6 +93,7 @@ def find_largest_checkpoint(checkpoint_location):
         return 0
 last_checkpoint_n = find_largest_checkpoint(checkpoint_location)
 
+translated_texts = []
 cnt = 0
 for record in instruct_dataset:
     # Check if there is already a checkpoint up to this batch
