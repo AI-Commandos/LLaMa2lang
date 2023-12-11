@@ -2,11 +2,11 @@
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # What it does
-The process we follow to tune LLaMa2-7b for a specific language is as follows:
+The process we follow to tune LLaMa2 for a specific language is as follows:
 
 1. We use the [Open Assistant dataset](https://huggingface.co/datasets/OpenAssistant/oasst1) from Huggingface as our base instruct data.
 2. We extract prompt-assistant pairs from the dataset, keeping only the highest ranked assistant replies per prompt.
-3. The result is a new dataset which we uploaded for convenience here (TBD).
+3. The result is a new dataset which we uploaded for convenience: [UnderstandLing/oasst1_instruct](https://huggingface.co/datasets/UnderstandLing/oasst1_instruct).
 4. These new prompt-assitant pairs are then translated using [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP). This follows a two-step process to translate the prompt and the assistant response separately:
 
     4.1 Try to translate from the source language to the desired target language using a model for that language pair.
