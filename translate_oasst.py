@@ -1,28 +1,29 @@
-from datasets import load_dataset
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-import torch
-import sys
 import os
-import re
+import torch
+from datasets import load_dataset, DatasetDict, Dataset
+from transformers import (
+    AutoModelForCausalLM,
+    AutoModelForSeq2SeqLM,
+    AutoTokenizer,
+    BitsAndBytesConfig,
+    TrainingArguments,
+    pipeline,
+    logging,
+)
+from peft import LoraConfig
+from trl import SFTTrainer
 import json
+import re
+import sys
 
-input = sys.argv[1]
-target_lang = sys.argv[2]
-checkpoint_location = sys.argv[3]
-checkpoint_n = int(sys.argv[4])
-
+# Set up configuration
+target_lang = sys.argv[1]
+checkpoint_location = sys.argv[2]
+checkpoint_n = int(sys.argv[3])
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-# Check if the dataset exists on Huggingface first
-try:
-  instruct_dataset = load_dataset(input)
-except FileNotFoundError as e:
-  with open(input, 'r', encoding='utf-8') as f:
-    instruct_dataset = json.load(f)
-
-# Create output folder
-if not os.path.exists(checkpoint_location):
-    os.makedirs(checkpoint_location)
+# Load the open assistant dataset
+dataset = load_dataset("OpenAssistant/oasst1")
 
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
@@ -91,51 +92,48 @@ def find_largest_checkpoint(checkpoint_location):
         return max(numbers)
     else:
         return 0
-last_checkpoint_n = find_largest_checkpoint(checkpoint_location)
 
-translated_texts = []
-cnt = 0
-for record in instruct_dataset:
-    # Check if there is already a checkpoint up to this batch
-    if cnt <= last_checkpoint_n:
-      cnt += 1
-      continue
+# Loop through the actual data and translate
+for fold in dataset:
+    translated_texts = []
+    cnt = 0
 
-    # Write out checkpoint file
-    if cnt % checkpoint_n == 0 and cnt != 0:
-      with open(f'{checkpoint_location}/upto_{cnt}.json', 'w', encoding='utf-8') as f:
-        json.dump(translated_texts, f, ensure_ascii=False)
-      translated_texts = []
+    # Create output folder
+    fold_checkpoint_location = checkpoint_location + '/' + fold
+    if not os.path.exists(fold_checkpoint_location):
+        os.makedirs(fold_checkpoint_location)
+    
+    last_checkpoint_n = find_largest_checkpoint(fold_checkpoint_location)
 
-    should_include = True
-    instruct_translated = record['instruction']
-    output_translated = record['output']
+    for record in dataset[fold]:
+        # Check if there is already a checkpoint up to this batch
+        if cnt <= last_checkpoint_n:
+            cnt += 1
+            continue
 
-    # First translate the instruction input
-    if record['i_lang'] != target_lang:
-      try:
-        translated_text = translate_text(record['instruction'], record['i_lang'], target_lang)
-      except:
+        # Write out checkpoint file
+        if cnt % checkpoint_n == 0 and cnt != 0:
+            print(f"Writing out checkpoint #{cnt}")
+            with open(f'{fold_checkpoint_location}/upto_{cnt}.json', 'w', encoding='utf-8') as f:
+                json.dump(translated_texts, f)
+            translated_texts = []
+
         translated_text = None
-        should_include = False
-      if not(translated_text is None):
-        instruct_translated = translated_text
+        new_lang = record['lang']
+        # Translate this record if the language is not the target
+        if record['lang'] != target_lang:
+            translated_text = translate_text(record['text'], record['lang'], target_lang)
+            new_lang = target_lang
+        else:
+            translated_text = record['text']
 
-    # Next the output
-    if record['o_lang'] != target_lang:
-      try:
-        translated_text = translate_text(record['output'], record['o_lang'], target_lang)
-      except:
-        translated_text = None
-        should_include = False
-      if not(translated_text is None):
-        output_translated = translated_text
-        
-    # Only add if both instruction and output got translated
-    if should_include:
-      full_prompt_answer = {'INSTRUCTION': instruct_translated, 'RESPONSE': output_translated} # Axolotl oasst format
-      translated_texts.append(full_prompt_answer)
-    cnt += 1
+        # Add full record with translated text
+        new_record = record
+        record['text'] = translated_text
+        record['lang'] = new_lang
+        translated_texts.append(new_record)
+        cnt += 1
 
-with open(f'{checkpoint_location}/upto_{cnt}.json', 'w', encoding='utf-8') as f:
-  json.dump(translated_texts, f, ensure_ascii=False)
+    # Write out any remaining records
+    with open(f'{fold_checkpoint_location}/upto_{cnt}.json', 'w', encoding='utf-8') as f:
+        json.dump(translated_texts, f)

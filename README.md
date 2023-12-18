@@ -5,36 +5,40 @@ This repository contains convenience scripts to finetune LLaMa2-7b for chat towa
 The process we follow to tune LLaMa2 for a specific language is as follows:
 
 1. We use the [Open Assistant dataset](https://huggingface.co/datasets/OpenAssistant/oasst1) from Huggingface as our base instruct data.
-2. We extract prompt-assistant pairs from the dataset, keeping only the highest ranked assistant replies per prompt.
-3. The result is a new dataset which we uploaded for convenience: [UnderstandLing/oasst1_instruct](https://huggingface.co/datasets/UnderstandLing/oasst1_instruct).
-4. These new prompt-assitant pairs are then translated using [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP). This follows a two-step process to translate the prompt and the assistant response separately:
+2. The dataset is fully translated into a specific target language using [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP). This follows a two-step process:
 
-    4.1 Try to translate from the source language to the desired target language using a model for that language pair.
+    2.1 Try to translate from the source language specified in OASST1 to the desired target language using a model for that language pair.
 
-    4.2 If there is no such model, try to translate from the source language to English first and then from English to the target language. If this fails too, the prompt-assistant pair is excluded.
-5. The result is an instruct dataset identical to 3. but now translated to the target language.
-6. Use QLoRA and PEFT to finetune LLaMa2 on this dataset.
+    2.2 If there is no such model, try to translate from the source language to English first and then from English to the target language.
+3. Load the translated OASST1 dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
+4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
+5. Use QLoRA and PEFT to finetune LLaMa2-chat on this dataset.
 
 # Usage
-0. Make sure pytorch is installed and working for your environment (use of CUDA preferable): https://pytorch.org/get-started/locally/
+1. Make sure pytorch is installed and working for your environment (use of CUDA preferable): https://pytorch.org/get-started/locally/
 
-1. Clone the repo and install the requirements.
+2. Clone the repo and install the requirements.
 
 `pip install -r requirements.txt`
 
-2. Convert the Open Assistant dataset to prompt-assistant pairs. You can optionally skip this step and use our dataset from Huggingface: [UnderstandLing/oasst1_instruct](https://huggingface.co/datasets/UnderstandLing/oasst1_instruct)
+2. Translate the OASST1 dataset into your target language. This script writes out intermediate results to a `checkpoint_location` because its runtime is quite lengthy (about 30-40 hours on a T4 Google Colab GPU).
 
-`python create_pairs.py instruct.json`
+`python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N]`
 
-3. Translate to the desired target language. Replace NL with your target language and make sure the output folder `translated_instruct` exists. The output folder is used to create checkpoints as a full translate takes a lot of time. First the code checks if the input dataset exists on disk. If that fails, it tries to retrieve the dataset from Huggingface.
+Parameters:
 
-`python translate_pairs.py UnderstandLing/oasst1_instruct nl translated_instruct 100`
+- `TARGET_LANG` The target language, use ISO language codes as used in the [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP).
+- `CHECKPOINT_FOLDER` The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
+- `CHECKPOINT_N` An integer representing how often a checkpoint file will be written out. OASST1 contains 84.4k records in train and another 4.4k records in validation. We found `200` to be a reasonable number for this parameter.
 
-or
+3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
 
-`python translate_pairs.py instruct.json nl translated_instruct 100`
+`python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]`
 
-4. [*Optional*] Publish your dataset to Huggingface. You will have to combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and can then publish it. Note that the below script will create a Dataset as per the Open Assistant data format that can readily be used in [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl). If you want to use the dataset for fine-tuning using the script in Step 5, be sure to skip this step 4.
+Parameters:
+
+- `[CHECKPOINT_FOLDER]` The same checkpoint location as used in translation but now with the `[TARGET_LANG]` added to it. Example: checkpoint location used to write: `./checkpoints` for target language `nl` results in this script requiring `./checkpoints/nl`.
+- [OUTPUT_LOCATION] Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
 
 **Option 1**
 
