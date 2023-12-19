@@ -19,6 +19,7 @@ dataset = load_dataset(dataset_name)
 
 compute_dtype = getattr(torch, "float16")
 
+# Set up quantization config
 quant_config = BitsAndBytesConfig(
   load_in_4bit=True,
   bnb_4bit_quant_type="nf4",
@@ -26,6 +27,7 @@ quant_config = BitsAndBytesConfig(
   bnb_4bit_use_double_quant=True,
 )
 
+# Load base model
 model = AutoModelForCausalLM.from_pretrained(
     base_model,
     quantization_config=quant_config,
@@ -34,10 +36,14 @@ model = AutoModelForCausalLM.from_pretrained(
 model.config.use_cache = False
 model.config.pretraining_tp = 1
 
+# Load base tokenizer
 tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
-tokenizer.pad_token = 0
+# Just like Alpaca, because we allow to add history in the prompts, it makes more sense to do left-padding to have the most informative text at the end.
+# In this case, we need a different pad token than EOS because we actually do _not_ pad end of sentence.
+tokenizer.pad_token_id = 0
 tokenizer.padding_side = "left"
 
+# Set up LoRA configuration
 peft_params = LoraConfig(
     lora_alpha=16,
     lora_dropout=0.1,
@@ -46,6 +52,7 @@ peft_params = LoraConfig(
     task_type="CAUSAL_LM",
 )
 
+# Pass quant and lora to trainer
 training_params = TrainingArguments(
     output_dir="./results",
     num_train_epochs=2,
@@ -65,7 +72,6 @@ training_params = TrainingArguments(
     lr_scheduler_type="constant",
     report_to="tensorboard"
 )
-
 trainer = SFTTrainer(
     model=model,
     train_dataset=dataset['train'],
@@ -77,11 +83,12 @@ trainer = SFTTrainer(
     packing=False,
 )
 
+# Use bigger precision in normalization layers
 for name, module in trainer.model.named_modules():
     if "norm" in name:
         module = module.to(torch.float32)
 
+# Train and push model to HF (make sure to set HF_TOKEN in env variables)
 trainer.train()
-
 trainer.model.push_to_hub(new_model)
 trainer.tokenizer.push_to_hub(new_model)

@@ -7,3 +7,6 @@ sentencepiece==0.1.99
 sacremoses==0.1.1
 datasets==2.15.0
 huggingface_hub==0.19.4
+scipy==1.11.4
+tensorboardx==2.6.2.2
+pandas==1.5.3
