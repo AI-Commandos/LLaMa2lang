@@ -8,14 +8,14 @@ input_folder = sys.argv[1]
 output_location = sys.argv[2]
 dataset = {}
 # Get the subdirectories which will become the keys of the Dataset
-folds = [name for name in os.listdir(input_folder) if os.path.isdir(name)]
+folds = [name for name in os.listdir(input_folder) if os.path.isdir(os.path.join(input_folder, name))]
 
 for fold in folds:
   all_data = []
 
-  for filename in os.listdir(fold):
+  for filename in os.listdir(os.path.join(input_folder, fold)):
       if filename.endswith('.json'):
-          file_path = os.path.join(fold, filename)
+          file_path = os.path.join(input_folder, fold, filename)
           with open(file_path, 'r', encoding='utf-8') as file:
               data = json.load(file)
               all_data.extend(data)
