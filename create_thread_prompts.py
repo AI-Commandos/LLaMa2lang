@@ -33,7 +33,7 @@ def find_highest_ranked_child(parent_id):
 # Construct threads
 folds = dataset.keys()
 threads = {k: [] for k in folds}
-for fold in tqdm(folds):
+for fold in folds:
   df = dataset[fold].to_pandas()
 
   # Replace NULLs in 'rank' with a value lower than the lowest rank
@@ -42,7 +42,7 @@ for fold in tqdm(folds):
 
   # Identify root messages (those without a parent_id)
   root_messages = df[df['parent_id'].isna()]
-  for _, root_message in root_messages.iterrows():
+  for _, root_message in tqdm(root_messages.iterrows()):
       # Create the thread
       thread = [{'text': root_message['text']}]
       next_message = find_highest_ranked_child(root_message['message_id'])
