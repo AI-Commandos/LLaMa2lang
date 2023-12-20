@@ -40,6 +40,20 @@ Parameters:
 - `[CHECKPOINT_FOLDER]` The same checkpoint location as used in translation but now with the `[TARGET_LANG]` added to it. Example: checkpoint location used to write: `./checkpoints` for target language `nl` results in this script requiring `./checkpoints/nl`.
 - [OUTPUT_LOCATION] Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
 
+4. Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.
+
+`python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]`
+
+Parameters:
+
+* `[INPUT_DATASET]` The input dataset, loaded from Huggingface datasets. This should be the result of the previous setp.
+* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
+    * EN: You are a generic chatbot that always answers in English.
+    * ES: Eres un chatbot genérico que siempre responde en español.
+    * FR: Tu es un chatbot générique qui répond toujours en français.
+    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
+* `[OUTPUT_DATASET]` Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+
 **Option 1**
 
 5. Fine-tune LLaMa2-7B using LoRA and PEFT. Change the name of the base model in the script if you want to use a different foundation model.
