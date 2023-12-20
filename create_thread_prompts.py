@@ -44,7 +44,7 @@ for fold in folds:
   root_messages = df[df['parent_id'].isna()]
 
   with tqdm(total=root_messages.count()) as pbar:      
-      for _, root_message in tqdm(root_messages.iterrows()):
+      for _, root_message in root_messages.iterrows():
           # Create the thread
           thread = [{'text': root_message['text']}]
           next_message = find_highest_ranked_child(root_message['message_id'])
