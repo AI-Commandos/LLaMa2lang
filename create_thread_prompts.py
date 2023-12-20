@@ -1,9 +1,11 @@
-from datasets import load_dataset
+from datasets import load_dataset, DatasetDict, Dataset
 import sys
+import os
 import pandas as pd
 
 dataset_name = sys.argv[1]
 system_instruction = sys.argv[2]
+output_location = sys.argv[3]
 
 dataset = load_dataset(dataset_name)
 
@@ -50,3 +52,16 @@ for fold in folds:
 
       # Turn this into LLaMa2 format
       threads[fold].append(format_thread(thread))
+
+  threads[fold] = Dataset.from_pandas(pd.DataFrame(data=threads[fold]))
+
+dataset = DatasetDict(threads)
+for fold in folds:
+    dataset[fold] = dataset[fold].rename_column('0', 'text')
+
+# Check if output location is a valid directory
+if os.path.isdir(output_location):
+    dataset.save_to_disk(output_location)
+else:
+    # Try to push to hub, requires HF_TOKEN environment variable to be set, see https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken
+    dataset.push_to_hub(output_location)
