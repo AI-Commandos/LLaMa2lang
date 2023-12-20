@@ -42,17 +42,21 @@ for fold in folds:
 
   # Identify root messages (those without a parent_id)
   root_messages = df[df['parent_id'].isna()]
-  for _, root_message in tqdm(root_messages.iterrows()):
-      # Create the thread
-      thread = [{'text': root_message['text']}]
-      next_message = find_highest_ranked_child(root_message['message_id'])
 
-      while next_message is not None:
-          thread.append({'text': next_message['text']})
-          next_message = find_highest_ranked_child(next_message['message_id'])
-
-      # Turn this into LLaMa2 format
-      threads[fold].append(format_thread(thread))
+  with tqdm(total=root_messages.count()) as pbar:      
+      for _, root_message in tqdm(root_messages.iterrows()):
+          # Create the thread
+          thread = [{'text': root_message['text']}]
+          next_message = find_highest_ranked_child(root_message['message_id'])
+    
+          while next_message is not None:
+              thread.append({'text': next_message['text']})
+              next_message = find_highest_ranked_child(next_message['message_id'])
+    
+          # Turn this into LLaMa2 format
+          threads[fold].append(format_thread(thread))
+          # Update progress
+          pbar.update(1)
 
   threads[fold] = Dataset.from_pandas(pd.DataFrame(data=threads[fold]))
 
