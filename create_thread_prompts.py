@@ -2,6 +2,7 @@ from datasets import load_dataset, DatasetDict, Dataset
 import sys
 import os
 import pandas as pd
+from tqdm import tqdm
 
 dataset_name = sys.argv[1]
 system_instruction = sys.argv[2]
@@ -32,7 +33,7 @@ def find_highest_ranked_child(parent_id):
 # Construct threads
 folds = dataset.keys()
 threads = {k: [] for k in folds}
-for fold in folds:
+for fold in tqdm(folds):
   df = dataset[fold].to_pandas()
 
   # Replace NULLs in 'rank' with a value lower than the lowest rank
