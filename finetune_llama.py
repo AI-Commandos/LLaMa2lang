@@ -11,6 +11,12 @@ from peft import LoraConfig
 from trl import SFTTrainer
 import sys
 
+# Check for HF_TOKEN because otherwise we run a long time before dying :)
+if 'HF_TOKEN' not in os.environ:
+    print("Environment variable 'HF_TOKEN' is not set. Terminating.")
+    sys.exit(1)
+
+
 base_model = sys.argv[1]
 new_model = sys.argv[2]
 dataset_name = sys.argv[3]

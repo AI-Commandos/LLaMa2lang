@@ -14,6 +14,12 @@ The process we follow to tune LLaMa2 for a specific language is as follows:
 4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
 5. Use QLoRA and PEFT to finetune LLaMa2-chat on this dataset.
 
+## Cost and runtime
+
+The above process can be fully run on a free Google Colab T4 GPU. The last step however, can only be successfully run with short enough context windows and a batch of at most 2. In addition, the translation in step 2 takes about 36 hours in total for any given language so should be run in multiple steps if you want to stick with a free Google Colab GPU.
+
+Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https://vast.ai/) and cost us less than a dollar for each model, completing in about 1.5 hours.
+
 # Usage
 1. Make sure pytorch is installed and working for your environment (use of CUDA preferable): https://pytorch.org/get-started/locally/
 
@@ -54,20 +60,37 @@ Parameters:
     * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
 * `[OUTPUT_DATASET]` Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
 
-**Option 1**
+5. Fine-tune LLaMa2-7B-chat (or another base model) using LoRA and PEFT.
 
-5. Fine-tune LLaMa2-7B using LoRA and PEFT. Change the name of the base model in the script if you want to use a different foundation model.
+`python finetune.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]`
 
-`python finetune.py translated_instruct model_name`
+Parameters:
 
-**Option 2**
-
-5. Fine-tune LLaMa2 using Axolotl. This gives you more flexibility over the type of quantization you want to apply (LoRA, QLoRA, ReLoRA) and allows you to swap out LLaMa-7b for a different model.
-
-    1. Install [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) by following its readme. Note that you have to be careful in selecting and installing the right Python, pyTorch, CUDA and Flash-Attention versions. This repo was tested against Python 3.9 with CUDA 11.7, pyTorch 2.0.1 and flash-attn 2.3.3 (installed from the [releases page](https://github.com/Dao-AILab/flash-attention/releases)).
+* `[BASE_MODEL]` The base foundation model. If you don't know which to use, we recommend [https://huggingface.co/NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf).
+* `[TUNED_MODEL]` The name of the resulting tuned model. This will be pushed to Huggingface directly. Make sure you have `HF_TOKEN` set as an environment variable.
+* `[DATASET_NAME]` The name of the dataset to use for finetuning.
 
 # Datasets and models
 
-- [oasst1_instruct](https://huggingface.co/datasets/UnderstandLing/oasst1_instruct) contains the prompt/assistant pairs that are the result of `create_pairs.py`.
-- [oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) contains the result of translating the instruct dataset to Dutch as a result of `translate_pairs.py`.
-- [llama-2-3b-chat-nl-lora](https://huggingface.co/UnderstandLing/llama-2-3b-chat-nl-lora) is a fine-tuned LLaMa2 3B instruct model, taking [open_llama_3b_v2](https://huggingface.co/openlm-research/open_llama_3b_v2) as base model using LoRA
+We have created and will continue to create numerous datasets and models already.
+
+## Translated oasst1 datasets
+
+- [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) The oasst1 dataset translated to Dutch.
+- [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) The oasst1 dataset translated to Spanish.
+- [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) The oasst1 dataset translated to French.
+- [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) The oasst1 dataset translated to German.
+
+## Translated LLaMa2 thread chat prompt datasets
+
+- [UnderstandLing/oasst1_nl_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_nl_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Dutch.
+- [UnderstandLing/oasst1_es_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_es_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Spanish.
+- [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) The LLaMa2 chat prompts with history from threads in oasst1 for French.
+- [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) The LLaMa2 chat prompts with history from threads in oasst1 for German.
+
+## Language-specific LLaMa2-7B chat model adapters
+
+- [UnderstandLing/llama-2-7b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-7b-chat-nl) QLoRA adapter for LLaMa2-7b-chat in Dutch.
+- [UnderstandLing/llama-2-7b-chat-es](https://huggingface.co/UnderstandLing/llama-2-7b-chat-es) QLoRA adapter for LLaMa2-7b-chat in Spanish.
+- [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
+- [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
