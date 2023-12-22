@@ -90,9 +90,9 @@ trainer = SFTTrainer(
 )
 
 # Use bigger precision in normalization layers
-for name, module in trainer.model.named_modules():
-    if "norm" in name:
-        module = module.to(torch.float32)
+#for name, module in trainer.model.named_modules():
+    #if "norm" in name:
+        #module = module.to(torch.float32)
 
 # Train and push model to HF (make sure to set HF_TOKEN in env variables)
 trainer.train()
