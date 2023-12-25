@@ -1,6 +1,25 @@
 # LLaMa2lang
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
+# TL;DR
+
+```
+pip install -r requirements.txt
+
+# Translate OASST1 to target language
+python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N]
+
+# Combine the checkpoint files into a dataset
+python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
+
+# Create threaded prompts
+python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]
+
+# Finetune
+python finetune.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
+```
+
+
 # What it does
 The process we follow to tune LLaMa2 for a specific language is as follows:
 
@@ -94,3 +113,35 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/llama-2-7b-chat-es](https://huggingface.co/UnderstandLing/llama-2-7b-chat-es) QLoRA adapter for LLaMa2-7b-chat in Spanish.
 - [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
 - [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
+
+## Language-specific LLaMa2-13B chat model adapters
+
+- [UnderstandLing/llama-2-13b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-13b-chat-nl) QLoRA adapter for LLaMa2-13B in Dutch
+
+## Coming soon
+- Portuguese
+- Italian
+- Russian
+
+# Empirical performance
+
+## Dutch
+
+`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam`
+
+`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)`
+
+`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland`
+
+`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.`
+
+# FAQ
+
+* Q: Why do you translate the full OASST1 dataset first? Wouldn't it be faster to only translate highest ranked threads?
+* A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1 translations to the community as we believe they can be useful on their own.
+
+* Q: How well do the fine-tunes perform compared to vanilla LLaMa2?
+* A: While we do not have formal benchmarks, getting LLaMa2 to consistently speak another language than English to begin with is challenging if not impossible. The non-English language it does produce is often grammatically broken. Our fine-tunes do not show this behavior.
+
+* Q: Can I use other frameworks for fine-tuning?
+* A: Yes you can, we use [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) for training on multi-GPU setups.
