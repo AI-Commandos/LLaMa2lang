@@ -28,6 +28,12 @@ dataset = load_dataset("OpenAssistant/oasst1")
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
 
+def load_model(model_name, model_key):
+  tokenizer = AutoTokenizer.from_pretrained(model_name)
+  model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
+  model_cache[model_key] = (model, tokenizer)
+  return model, tokenizer
+
 # Tries to obtain a translation model from the Helsinki-NLP groups OPUS models. Returns None, None if no model is found for this language pair
 def get_helsinki_nlp_model(source_lang, target_lang):
     model_key = f'{source_lang}-{target_lang}'
@@ -37,11 +43,13 @@ def get_helsinki_nlp_model(source_lang, target_lang):
 
     model_name = f'Helsinki-NLP/opus-mt-{source_lang}-{target_lang}'
     try:
-      tokenizer = AutoTokenizer.from_pretrained(model_name)
-      model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
-      model_cache[model_key] = (model, tokenizer)
-      return model, tokenizer
+      return load_model(model_name, model_key)
     except Exception as e:
+      # Try to load the tc-big naming convention files
+      try:
+        model_name = f'Helsinki-NLP/opus-mt-tc-big-{source_lang}-{target_lang}'
+        return load_model(model_name, model_key)
+      except Exception as e:
         return None, None
 
 # If a direct translation between two languages isn't possible, we ettempt to use English as a bridge (or any other intermediate lang)
