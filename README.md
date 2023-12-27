@@ -117,7 +117,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) The oasst1 dataset translated to French.
 - [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) The oasst1 dataset translated to German.
 - [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) The oasst1 dataset translated to Catalan.
-- [UnderstandLing/oasst1_py](https://huggingface.co/datasets/UnderstandLing/oasst1_py) The oasst1 dataset translated to Portuguese.
+- [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) The oasst1 dataset translated to Portuguese.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
