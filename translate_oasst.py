@@ -20,10 +20,11 @@ import sys
 target_lang = sys.argv[1]
 checkpoint_location = sys.argv[2]
 checkpoint_n = int(sys.argv[3])
+dataset_name = sys.argv[4]
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 # Load the open assistant dataset
-dataset = load_dataset("OpenAssistant/oasst1")
+dataset = load_dataset(dataset_name)
 
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
