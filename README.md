@@ -17,6 +17,9 @@ python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DAT
 
 # Finetune
 python finetune.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
+
+# Run inference
+python run_inference.py [BASE_MODEL] [INSTRUCTION_PROMPT] [INPUT]
 ```
 
 
@@ -89,6 +92,20 @@ Parameters:
 * `[TUNED_MODEL]` The name of the resulting tuned model. This will be pushed to Huggingface directly. Make sure you have `HF_TOKEN` set as an environment variable.
 * `[DATASET_NAME]` The name of the dataset to use for finetuning.
 
+6. Run inference using the newly created QLoRA model.
+
+`python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]`
+
+Parameters:
+
+* `[TUNED_MODEL]` The name of the resulting tuned model that you pushed to Huggingface in the previous step.
+* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
+    * EN: You are a generic chatbot that always answers in English.
+    * ES: Eres un chatbot genérico que siempre responde en español.
+    * FR: Tu es un chatbot générique qui répond toujours en français.
+    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
+* `[INPUT]` The actual chat input prompt. Script is only meant for testing purposes and currently exits directly after answering. Run twice to incorporate the history of the previous answer.
+
 # Datasets and models
 
 We have created and will continue to create numerous datasets and models already.
@@ -100,6 +117,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) The oasst1 dataset translated to French.
 - [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) The oasst1 dataset translated to German.
 - [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) The oasst1 dataset translated to Catalan.
+- [UnderstandLing/oasst1_py](https://huggingface.co/datasets/UnderstandLing/oasst1_py) The oasst1 dataset translated to Portuguese.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
@@ -108,6 +126,8 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) The LLaMa2 chat prompts with history from threads in oasst1 for French.
 - [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) The LLaMa2 chat prompts with history from threads in oasst1 for German.
 - [xaviviro/oasst1_ca_threads](https://huggingface.co/datasets/xaviviro/oasst1_ca_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Catalan.
+- [UnderstandLing/oasst1_pt_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_pt_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Portuguese.
+
 
 ## Language-specific LLaMa2-7B chat model adapters
 
@@ -126,7 +146,6 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/Mixtral-8x7B-Instruct-nl](https://huggingface.co/UnderstandLing/Mixtral-8x7B-Instruct-nl) QLoRA adapter for Mixtral-8x7B in Dutch.
 
 ## Coming soon
-- Portuguese
 - Italian
 - Russian
 
