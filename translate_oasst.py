@@ -122,13 +122,6 @@ for fold in dataset:
                     cnt += 1
                     continue
                 
-                # Write out checkpoint file
-                if cnt % checkpoint_n == 0 and cnt != 0:
-                    print(f"Writing out checkpoint #{cnt} for source language {source_lang}")
-                    with open(os.path.join(lang_checkpoint_location, f'upto_{cnt}.json'), 'w', encoding='utf-8') as f:
-                        json.dump(translated_texts, f)
-                    translated_texts = []
-                
                 # Translate a full batch
                 batch = records[cnt:cnt+batch_size]
                 texts_to_translate = [record['text'] for record in batch]
@@ -143,6 +136,13 @@ for fold in dataset:
                 
                 cnt += batch_size
                 pbar.update(batch_size)
+
+                # Write out checkpoint file
+                if cnt % checkpoint_n == 0 and cnt != 0:
+                    print(f"Writing out checkpoint #{cnt} for source language {source_lang}")
+                    with open(os.path.join(lang_checkpoint_location, f'upto_{cnt}.json'), 'w', encoding='utf-8') as f:
+                        json.dump(translated_texts, f)
+                    translated_texts = []
 
         # Write checkpoint
         checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
