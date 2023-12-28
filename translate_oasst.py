@@ -21,7 +21,7 @@ import gc
 target_lang = sys.argv[1]
 checkpoint_location = sys.argv[2]
 checkpoint_n = int(sys.argv[3])
-batch_size = int(sys.arvg[4])
+batch_size = int(sys.argv[4])
 if checkpoint_n % batch_size != 0:
     raise Exception("Checkpoint N must be a multiple of batch size!")
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
