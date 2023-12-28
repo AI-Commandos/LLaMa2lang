@@ -94,6 +94,8 @@ trainer = SFTTrainer(
     #if "norm" in name:
         #module = module.to(torch.float32)
 
+# Before starting training, free up memory
+torch.cuda.empty_cache()
 # Train and push model to HF (make sure to set HF_TOKEN in env variables)
 trainer.train()
 trainer.model.push_to_hub(new_model)
