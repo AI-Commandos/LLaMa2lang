@@ -138,8 +138,8 @@ with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
 
                 # Write out checkpoint file
                 if (cnt + batch_size) % checkpoint_n == 0 and cnt != 0:
-                    print(f"Writing out checkpoint #{cnt} for source language {source_lang}")
-                    with open(os.path.join(lang_checkpoint_location, f'upto_{cnt}.json'), 'w', encoding='utf-8') as f:
+                    print(f"Writing out checkpoint #{str(cnt + batch_size)} for source language {source_lang}")
+                    with open(os.path.join(lang_checkpoint_location, f'upto_{str(cnt + batch_size)}.json'), 'w', encoding='utf-8') as f:
                         json.dump(translated_texts, f)
                     translated_texts = []
 
