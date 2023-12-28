@@ -16,7 +16,7 @@ python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
 python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]
 
 # Finetune
-python finetune.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
+python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
 
 # Run inference
 python run_inference.py [BASE_MODEL] [INSTRUCTION_PROMPT] [INPUT]
@@ -84,7 +84,7 @@ Parameters:
 
 5. Fine-tune LLaMa2-7B-chat (or another base model) using LoRA and PEFT.
 
-`python finetune.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]`
+`python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]`
 
 Parameters:
 
