@@ -116,10 +116,9 @@ with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
             last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
             translated_texts = []
             print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
-            for cnt in range(0, len(records), checkpoint_n):
+            for cnt in range(0, len(records), batch_size):
                 # Check if there is already a checkpoint up to this batch
                 if cnt < last_checkpoint_n:
-                    cnt += 1
                     pbar.update(1)
                     continue
                 
@@ -135,7 +134,6 @@ with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
                         record['lang'] = target_lang
                         translated_texts.append(record)
                 
-                cnt += batch_size
                 pbar.update(batch_size)
 
                 # Write out checkpoint file
