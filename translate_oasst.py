@@ -16,6 +16,7 @@ import json
 import re
 import sys
 import gc
+from tqdm import tqdm
 
 # Set up configuration
 target_lang = sys.argv[1]
@@ -114,32 +115,34 @@ for fold in dataset:
         last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
         translated_texts = []
         print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
-        for cnt in range(0, len(records), checkpoint_n):
-            # Check if there is already a checkpoint up to this batch
-            if cnt <= last_checkpoint_n:
-                cnt += 1
-                continue
-            
-            # Write out checkpoint file
-            if cnt % checkpoint_n == 0 and cnt != 0:
-                print(f"Writing out checkpoint #{cnt} for source language {source_lang}")
-                with open(os.path.join(lang_checkpoint_location, f'upto_{cnt}.json'), 'w', encoding='utf-8') as f:
-                    json.dump(translated_texts, f)
-                translated_texts = []
-            
-            # Translate a full batch
-            batch = records[cnt:cnt+batch_size]
-            texts_to_translate = [record['text'] for record in batch]
-            translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
+        with tqdm(total=len(records) - last_checkpoint_n) as pbar:
+            for cnt in range(0, len(records), checkpoint_n):
+                # Check if there is already a checkpoint up to this batch
+                if cnt <= last_checkpoint_n:
+                    cnt += 1
+                    continue
+                
+                # Write out checkpoint file
+                if cnt % checkpoint_n == 0 and cnt != 0:
+                    print(f"Writing out checkpoint #{cnt} for source language {source_lang}")
+                    with open(os.path.join(lang_checkpoint_location, f'upto_{cnt}.json'), 'w', encoding='utf-8') as f:
+                        json.dump(translated_texts, f)
+                    translated_texts = []
+                
+                # Translate a full batch
+                batch = records[cnt:cnt+batch_size]
+                texts_to_translate = [record['text'] for record in batch]
+                translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
 
-            if translated_batch is not None:
-                # Combine original record with translated text
-                for record, translation in zip(batch, translated_batch):
-                    record['text'] = translation
-                    record['lang'] = target_lang
-                    translated_texts.append(record)
-            
-            cnt += batch_size
+                if translated_batch is not None:
+                    # Combine original record with translated text
+                    for record, translation in zip(batch, translated_batch):
+                        record['text'] = translation
+                        record['lang'] = target_lang
+                        translated_texts.append(record)
+                
+                cnt += batch_size
+                pbar.update(batch_size)
 
         # Write checkpoint
         checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
