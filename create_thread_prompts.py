@@ -8,7 +8,10 @@ dataset_name = sys.argv[1]
 system_instruction = sys.argv[2]
 output_location = sys.argv[3]
 
-dataset = load_dataset(dataset_name)
+if os.path.isdir(dataset_name):
+    dataset = load_dataset('arrow', data_files=os.path.join(dataset_name, '*.arrow'))
+else:
+    dataset = load_dataset(dataset_name)
 
 # Function to format a thread in LLaMa2 format
 def format_thread(thread):
