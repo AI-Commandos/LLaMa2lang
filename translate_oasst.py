@@ -106,20 +106,21 @@ def group_records_by_language(dataset):
     return grouped_records
 
 # Loop through the actual data and translate
-for fold in dataset:
-    records_by_lang = group_records_by_language(dataset[fold])
-    
-    for source_lang, records in records_by_lang.items():
-        lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
-        os.makedirs(lang_checkpoint_location, exist_ok=True)
-        last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
-        translated_texts = []
-        print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
-        with tqdm(total=len(records) - last_checkpoint_n) as pbar:
+with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
+    for fold in dataset:
+        records_by_lang = group_records_by_language(dataset[fold])
+        
+        for source_lang, records in records_by_lang.items():
+            lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
+            os.makedirs(lang_checkpoint_location, exist_ok=True)
+            last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
+            translated_texts = []
+            print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
             for cnt in range(0, len(records), checkpoint_n):
                 # Check if there is already a checkpoint up to this batch
                 if cnt <= last_checkpoint_n:
                     cnt += 1
+                    pbar.update(1)
                     continue
                 
                 # Translate a full batch
