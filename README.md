@@ -19,7 +19,7 @@ python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DAT
 python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
 
 # Run inference
-python run_inference.py [BASE_MODEL] [INSTRUCTION_PROMPT] [INPUT]
+python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]
 ```
 
 
