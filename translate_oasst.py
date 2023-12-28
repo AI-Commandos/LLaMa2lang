@@ -145,10 +145,10 @@ with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
                         json.dump(translated_texts, f)
                     translated_texts = []
 
-        # Write checkpoint
-        checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
-        with open(checkpoint_file, 'w', encoding='utf-8') as f:
-            json.dump(batch, f)
+            # Write checkpoint
+            checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
+            with open(checkpoint_file, 'w', encoding='utf-8') as f:
+                json.dump(batch, f)
     
     # One source language down, release the memory
     if device == 'cuda':
