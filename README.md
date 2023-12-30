@@ -19,7 +19,7 @@ python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
 python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]
 
 # Finetune
-python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]
+python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME] [BATCH_SIZE]
 
 # Run inference
 python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]
