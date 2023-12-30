@@ -1,13 +1,16 @@
 # LLaMa2lang
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
+# Change info
+* **[2023-12-29]** We now batch translations in `translate_oasst.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
+
 # TL;DR
 
 ```
 pip install -r requirements.txt
 
 # Translate OASST1 to target language
-python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N]
+python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]
 
 # Combine the checkpoint files into a dataset
 python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
@@ -51,13 +54,14 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 
 2. Translate the OASST1 dataset into your target language. This script writes out intermediate results to a `checkpoint_location` because its runtime is quite lengthy (about 30-40 hours on a T4 Google Colab GPU).
 
-`python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N]`
+`python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]`
 
 Parameters:
 
 - `TARGET_LANG` The target language, use ISO language codes as used in the [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP).
 - `CHECKPOINT_FOLDER` The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
 - `CHECKPOINT_N` An integer representing how often a checkpoint file will be written out. OASST1 contains 84.4k records in train and another 4.4k records in validation. We found `200` to be a reasonable number for this parameter.
+- `BATCH_SIZE` The batch size to put through a single translation model for a single source language in one go. Make this small enough to fit on your GPU yet large enough to gain significant time. A good guess for value would be 20 or 40 on an 8/16GB GPU.
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
 

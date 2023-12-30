@@ -13,12 +13,13 @@ folds = [name for name in os.listdir(input_folder) if os.path.isdir(os.path.join
 for fold in folds:
   all_data = []
 
-  for filename in os.listdir(os.path.join(input_folder, fold)):
-      if filename.endswith('.json'):
-          file_path = os.path.join(input_folder, fold, filename)
-          with open(file_path, 'r', encoding='utf-8') as file:
-              data = json.load(file)
-              all_data.extend(data)
+  for lang_folder in os.listdir(os.path.join(input_folder, fold)):
+      for filename in os.listdir(os.path.join(input_folder, fold, lang_folder)):
+        if filename.endswith('.json'):
+            file_path = os.path.join(input_folder, fold, lang_folder, filename)
+            with open(file_path, 'r', encoding='utf-8') as file:
+                data = json.load(file)
+                all_data.extend(data)
 
   dataset[fold] = Dataset.from_pandas(pd.DataFrame(data=all_data))
 

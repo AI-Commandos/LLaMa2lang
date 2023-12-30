@@ -46,7 +46,7 @@ for fold in folds:
   # Identify root messages (those without a parent_id)
   root_messages = df[df['parent_id'].isna()]
 
-  with tqdm(total=root_messages.size) as pbar:      
+  with tqdm(total=root_messages.size) as pbar:
       for _, root_message in root_messages.iterrows():
           # Create the thread
           thread = [{'text': root_message['text']}]
