@@ -14,6 +14,8 @@ model = AutoPeftModelForCausalLM.from_pretrained(model_name, device_map="auto", 
 model = model.merge_and_unload()
 model.eval()
 tokenizer = AutoTokenizer.from_pretrained(model_name)
+tokenizer.pad_token_id = 0
+tokenizer.padding_side = "left"
 
 # Prepare input in LLaMa2 chat format
 input_text = f"<s>[INST] <<SYS>> {system_instruction} <</SYS>> {input} [/INST]"
