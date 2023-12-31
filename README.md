@@ -159,6 +159,8 @@ We have created and will continue to create numerous datasets and models already
 ## Language-specific LLaMa2-13B chat model adapters
 
 - [UnderstandLing/llama-2-13b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-13b-chat-nl) QLoRA adapter for LLaMa2-13B in Dutch.
+- [UnderstandLing/llama-2-13b-chat-es](https://huggingface.co/UnderstandLing/llama-2-13b-chat-es) QLoRA adapter for LLaMa2-13B in Spanish.
+- [UnderstandLing/llama-2-13b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-13b-chat-fr) QLoRA adapter for LLaMa2-13B in French.
 
 ## Language-specific Mixtral-8x7B chat model adapters
 
