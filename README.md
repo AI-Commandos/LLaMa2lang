@@ -1,4 +1,4 @@
-# LLaMa2lang
+# LLaMa2lang v0.2
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # Change info
