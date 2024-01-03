@@ -33,6 +33,11 @@ dataset = load_dataset("OpenAssistant/oasst1")
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
 
+# Alternative models that are not created by Helsink-NLP
+alternative_models = {
+    "en-pl": 'gsarti/opus-mt-tc-en-pl'
+}
+
 def load_model(model_name, model_key):
   tokenizer = AutoTokenizer.from_pretrained(model_name)
   model = AutoModelForSeq2SeqLM.from_pretrained(model_name).to(device)
@@ -41,9 +46,9 @@ def load_model(model_name, model_key):
 
 # Tries to obtain a translation model from the Helsinki-NLP groups OPUS models. Returns None, None if no model is found for this language pair
 def get_helsinki_nlp_model(source_lang, target_lang):
-    alternative_models = {
-        "en-pl": 'gsarti/opus-mt-tc-en-pl'
-    }
+    # Small fix for odd language codes
+    if source_lang == 'pt-BR':
+        source_lang = 'bzs'
     model_key = f'{source_lang}-{target_lang}'
 
     if model_key in model_cache:
