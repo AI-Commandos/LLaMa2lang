@@ -41,6 +41,9 @@ def load_model(model_name, model_key):
 
 # Tries to obtain a translation model from the Helsinki-NLP groups OPUS models. Returns None, None if no model is found for this language pair
 def get_helsinki_nlp_model(source_lang, target_lang):
+    alternative_models = {
+        "en-pl": 'gsarti/opus-mt-tc-en-pl'
+    }
     model_key = f'{source_lang}-{target_lang}'
 
     if model_key in model_cache:
@@ -55,7 +58,11 @@ def get_helsinki_nlp_model(source_lang, target_lang):
         model_name = f'Helsinki-NLP/opus-mt-tc-big-{source_lang}-{target_lang}'
         return load_model(model_name, model_key)
       except Exception as e:
-        return None, None
+        try:
+          model_name = alternative_models[model_key]
+          return load_model(model_name, model_key)
+        except Exception as e:
+          return None, None
 
 def batch_translate(texts, source_lang, target_lang, intermediate_lang = 'en'):
     model, tokenizer = get_helsinki_nlp_model(source_lang, target_lang)
