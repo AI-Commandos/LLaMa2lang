@@ -39,7 +39,7 @@ def main():
     output_dataset = args.output_dataset
 
     if os.path.isdir(dataset_name):
-        dataset = load_dataset('arrow', data_files=os.path.join(dataset_name, '*.arrow'))
+        dataset = load_from_disk(os.path.join(dataset_name))
     else:
         dataset = load_dataset(dataset_name)
     
