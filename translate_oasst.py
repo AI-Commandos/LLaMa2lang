@@ -17,18 +17,7 @@ import re
 import sys
 import gc
 from tqdm import tqdm
-
-# Set up configuration
-target_lang = sys.argv[1]
-checkpoint_location = sys.argv[2]
-checkpoint_n = int(sys.argv[3])
-batch_size = int(sys.argv[4])
-if checkpoint_n % batch_size != 0:
-    raise Exception("Checkpoint N must be a multiple of batch size!")
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
-# Load the open assistant dataset
-dataset = load_dataset("OpenAssistant/oasst1")
+import argparse
 
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
@@ -119,50 +108,76 @@ def group_records_by_language(dataset):
         grouped_records[lang].append(record)
     return grouped_records
 
-# Loop through the actual data and translate
-with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
-    for fold in dataset:
-        records_by_lang = group_records_by_language(dataset[fold])
-        
-        for source_lang, records in records_by_lang.items():
-            lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
-            os.makedirs(lang_checkpoint_location, exist_ok=True)
-            last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
-            translated_texts = []
-            print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
-            for cnt in range(0, len(records), batch_size):
-                # Check if there is already a checkpoint up to this batch
-                if cnt < last_checkpoint_n:
-                    pbar.update(1)
-                    continue
-                
-                # Translate a full batch
-                batch = records[cnt:cnt+batch_size]
-                texts_to_translate = [record['text'] for record in batch]
-                translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
+def main():
+    parser = argparse.ArgumentParser(description="Script for translation using Helsinki-NLP's OPUS models.")
+    parser.add_argument('target_lang', type=str, 
+                        help="The target language, using language codes as used in Helsinki-NLP's OPUS translation models.")
+    parser.add_argument('checkpoint_folder', type=str, 
+                        help="The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.")
+    parser.add_argument('--checkpoint_n', type=int, default=400,
+                        help="An integer representing how often a checkpoint file will be written out. For OASST1, 400 is a reasonable number.")
+    parser.add_argument('--batch_size', type=int, default=20,
+                        help="The batch size for a single translation model. Adjust based on your GPU capacity. Default is 20.")
 
-                if translated_batch is not None:
-                    # Combine original record with translated text
-                    for record, translation in zip(batch, translated_batch):
-                        record['text'] = translation
-                        record['lang'] = target_lang
-                        translated_texts.append(record)
-                
-                pbar.update(batch_size)
+    # Parse the arguments
+    args = parser.parse_args()
 
-                # Write out checkpoint file
-                if (cnt + batch_size) % checkpoint_n == 0 and cnt != 0:
-                    print(f"Writing out checkpoint #{str(cnt + batch_size)} for source language {source_lang}")
-                    with open(os.path.join(lang_checkpoint_location, f'upto_{str(cnt + batch_size)}.json'), 'w', encoding='utf-8') as f:
-                        json.dump(translated_texts, f)
-                    translated_texts = []
+    # Accessing the arguments
+    target_lang = args.target_lang
+    checkpoint_folder = args.checkpoint_folder
+    checkpoint_n = args.checkpoint_n
+    batch_size = args.batch_size
 
-            # Write checkpoint
-            checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
-            with open(checkpoint_file, 'w', encoding='utf-8') as f:
-                json.dump(batch, f)
+    if checkpoint_n % batch_size != 0:
+        raise Exception("Checkpoint N must be a multiple of batch size!")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-        # One source language down, release the memory
-        if device == 'cuda':
-            gc.collect()
-            torch.cuda.empty_cache()
+    # Load the open assistant dataset
+    dataset = load_dataset("OpenAssistant/oasst1")
+
+    # Loop through the actual data and translate
+    with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
+        for fold in dataset:
+            records_by_lang = group_records_by_language(dataset[fold])
+            
+            for source_lang, records in records_by_lang.items():
+                lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
+                os.makedirs(lang_checkpoint_location, exist_ok=True)
+                last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
+                translated_texts = []
+                print(f'Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
+                pbar.update(last_checkpoint_n)
+                for cnt in range(last_checkpoint_n, len(records), batch_size):
+                    # Translate a full batch
+                    batch = records[cnt:cnt+batch_size]
+                    texts_to_translate = [record['text'] for record in batch]
+                    translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
+
+                    if translated_batch is not None:
+                        # Combine original record with translated text
+                        for record, translation in zip(batch, translated_batch):
+                            record['text'] = translation
+                            record['lang'] = target_lang
+                            translated_texts.append(record)
+                    
+                    pbar.update(batch_size)
+
+                    # Write out checkpoint file
+                    if (cnt + batch_size) % checkpoint_n == 0 and cnt != 0:
+                        print(f"Writing out checkpoint #{str(cnt + batch_size)} for source language {source_lang}")
+                        with open(os.path.join(lang_checkpoint_location, f'upto_{str(cnt + batch_size)}.json'), 'w', encoding='utf-8') as f:
+                            json.dump(translated_texts, f)
+                        translated_texts = []
+
+                # Write checkpoint
+                checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
+                with open(checkpoint_file, 'w', encoding='utf-8') as f:
+                    json.dump(batch, f)
+
+            # One source language down, release the memory
+            if device == 'cuda':
+                gc.collect()
+                torch.cuda.empty_cache()
+
+if __name__ == "__main__":
+    main()
