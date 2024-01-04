@@ -112,7 +112,7 @@ def main():
     parser = argparse.ArgumentParser(description="Translate a dataset (default: oasst1) to target language")
     parser.add_argument('target_lang', type=str, 
                         help="The target language, using language codes as used in Helsinki-NLP's OPUS translation models.")
-    parser.add_argument('checkpoint_folder', type=str, 
+    parser.add_argument('checkpoint_location', type=str, 
                         help="The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.")
     parser.add_argument('--base_dataset', type=str, default="OpenAssistant/oasst1",
                         help="The base dataset to translate, defaults to OpenAssistant/oasst1")
@@ -126,7 +126,7 @@ def main():
                         help="The batch size for a single translation model. Adjust based on your GPU capacity. Default is 20.")
     args = parser.parse_args()
     target_lang = args.target_lang
-    checkpoint_folder = args.checkpoint_folder
+    checkpoint_location = args.checkpoint_location
     checkpoint_n = args.checkpoint_n
     batch_size = args.batch_size
     base_dataset = args.base_dataset
