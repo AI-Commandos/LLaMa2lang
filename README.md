@@ -26,13 +26,13 @@ python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]
 ```
 
 # Roadmap
-* Use a proper argument parser instead of sys.argv
-* Make the base model (llama2-7b-chat) configurable so you can also finetune Mistral, Mixtral or others.
-* Investigate other/better translation models than HelsinkiNLP's OPUS
-* Add DPO training as RLHF alternative
-* Investigate multi-GPU support
-* Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
-* Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
+* [L2L-1] Use a proper argument parser instead of sys.argv
+* [L2L-2] Make the base model (llama2-7b-chat) configurable so you can also finetune Mistral, Mixtral or others.
+* [L2L-3] Investigate other/better translation models than HelsinkiNLP's OPUS
+* [L2L-4] Add DPO training as RLHF alternative
+* [L2L-5] Investigate multi-GPU support
+* [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
+* [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
 
 # What it does
 The process we follow to tune LLaMa2 for a specific language is as follows:
