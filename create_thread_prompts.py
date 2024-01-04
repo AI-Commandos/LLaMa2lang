@@ -76,7 +76,7 @@ def main():
         
             while next_message is not None:
                 thread.append({'text': next_message[base_dataset_text_field]})
-                next_message = find_highest_ranked_child(next_message[base_dataset_id_field])
+                next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
         
             # Turn this into LLaMa2 format
             threads[fold].append(format_thread(thread))
