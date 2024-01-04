@@ -78,7 +78,7 @@ Parameters:
 Parameters:
 
 - `[CHECKPOINT_FOLDER]` The same checkpoint location as used in translation but now with the `[TARGET_LANG]` added to it. Example: checkpoint location used to write: `./checkpoints` for target language `nl` results in this script requiring `./checkpoints/nl`.
-- [OUTPUT_LOCATION] Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+- `[OUTPUT_LOCATION]` Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
 
 4. Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.
 
@@ -162,7 +162,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
 - [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
 - [xaviviro/llama-2-7b-chat-ca](https://huggingface.co/xaviviro/llama-2-7b-chat-ca) QLoRA adapter for LLaMa2-7b-chat in Catalan.
-- - [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
+- [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
 - [HeshamHaroon/llama-2-7b-chat-ar](https://huggingface.co/HeshamHaroon/llama-2-7b-chat-ar) QLoRA adapter for LLaMa2-7b-chat in Arabic.
 - [UnderstandLing/llama-2-7b-chat-it](https://huggingface.co/UnderstandLing/llama-2-7b-chat-it) QLoRA adapter for LLaMa2-7b-chat in Italian.
 - [UnderstandLing/llama-2-7b-chat-ru](https://huggingface.co/UnderstandLing/llama-2-7b-chat-ru) QLoRA adapter for LLaMa2-7b-chat in Russian.

@@ -118,11 +118,7 @@ def main():
                         help="An integer representing how often a checkpoint file will be written out. For OASST1, 400 is a reasonable number.")
     parser.add_argument('--batch_size', type=int, default=20,
                         help="The batch size for a single translation model. Adjust based on your GPU capacity. Default is 20.")
-
-    # Parse the arguments
     args = parser.parse_args()
-
-    # Accessing the arguments
     target_lang = args.target_lang
     checkpoint_folder = args.checkpoint_folder
     checkpoint_n = args.checkpoint_n
