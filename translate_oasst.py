@@ -167,8 +167,8 @@ def main():
 
     # Set up madlad if required
     if use_madlad:
-        model = T5ForConditionalGeneration.from_pretrained(model_name, device_map=device, load_in_8bit=madlad_quant)
-        tokenizer = T5Tokenizer.from_pretrained(model_name)
+        model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, load_in_8bit=madlad_quant)
+        tokenizer = T5Tokenizer.from_pretrained("google/madlad400-3b-mt")
         model_cache['madlad'] = (model, tokenizer)
 
     # Loop through the actual data and translate
