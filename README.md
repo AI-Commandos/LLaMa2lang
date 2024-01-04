@@ -10,19 +10,19 @@ This repository contains convenience scripts to finetune LLaMa2-7b for chat towa
 pip install -r requirements.txt
 
 # Translate OASST1 to target language
-python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]
+python translate_oasst.py target_lang checkpoint_location
 
 # Combine the checkpoint files into a dataset
-python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
+python combine_checkpoints.py input_folder output_location
 
 # Create threaded prompts
-python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]
+python create_thread_prompts.py dataset_name instruction_prompt output_location
 
 # Finetune
-python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME] [BATCH_SIZE]
+python finetune_llama.py tuned_model dataset_name
 
 # Run inference
-python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]
+python run_inference.py model_name instruction_prompt input
 ```
 
 # Roadmap
@@ -62,62 +62,130 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 
 2. Translate the OASST1 dataset into your target language. This script writes out intermediate results to a `checkpoint_location` because its runtime is quite lengthy (about 30-40 hours on a T4 Google Colab GPU).
 
-`python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]`
+```
+usage: translate_oasst.py [-h] [--base_dataset BASE_DATASET]
+                          [--base_dataset_text_field BASE_DATASET_TEXT_FIELD]
+                          [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
+                          [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE]
+                          target_lang checkpoint_location
 
-Parameters:
+Translate a dataset (default: oasst1) to target language
 
-- `TARGET_LANG` The target language, use ISO language codes as used in the [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP).
-- `CHECKPOINT_FOLDER` The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
-- `CHECKPOINT_N` An integer representing how often a checkpoint file will be written out. OASST1 contains 84.4k records in train and another 4.4k records in validation. We found `200` to be a reasonable number for this parameter.
-- `BATCH_SIZE` The batch size to put through a single translation model for a single source language in one go. Make this small enough to fit on your GPU yet large enough to gain significant time. A good guess for value would be 20 or 40 on an 8/16GB GPU.
+positional arguments:
+  target_lang           The target language, using language codes as used in Helsinki-NLP's OPUS
+                        translation models.
+  checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder
+                        will be created if it doesn't exist.
+
+options:
+  -h, --help            show this help message and exit
+  --base_dataset BASE_DATASET
+                        The base dataset to translate, defaults to OpenAssistant/oasst1
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The base dataset's column name containing the actual text to translate.
+                        Defaults to text
+  --base_dataset_lang_field BASE_DATASET_LANG_FIELD
+                        The base dataset's column name containing the language the source text was
+                        written in. Defaults to lang
+  --checkpoint_n CHECKPOINT_N
+                        An integer representing how often a checkpoint file will be written out.
+                        For OASST1, 400 is a reasonable number.
+  --batch_size BATCH_SIZE
+                        The batch size for a single translation model. Adjust based on your GPU
+                        capacity. Default is 20.
+```
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
 
-`python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]`
+```
+usage: combine_checkpoints.py [-h] input_folder output_location
 
-Parameters:
+Combine checkpoint files from translation.
 
-- `[CHECKPOINT_FOLDER]` The same checkpoint location as used in translation but now with the `[TARGET_LANG]` added to it. Example: checkpoint location used to write: `./checkpoints` for target language `nl` results in this script requiring `./checkpoints/nl`.
-- [OUTPUT_LOCATION] Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+positional arguments:
+  input_folder     The checkpoint folder used in translation, with the target language appended.
+                   Example: "./checkpoints/nl".
+  output_location  Where to write the Huggingface Dataset. Can be a disk location or a Huggingface
+                   Dataset repository.
+
+options:
+  -h, --help       show this help message and exit
+```
 
 4. Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.
 
-`python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]`
+```
+usage: create_thread_prompts.py [-h] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD]
+                                [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
+                                [--base_dataset_id_field BASE_DATASET_ID_FIELD]
+                                [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD]
+                                dataset_name instruction_prompt output_location
 
-Parameters:
+Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the
+highest ranking answer following a given input prompt.
 
-* `[INPUT_DATASET]` The input dataset, loaded from Huggingface datasets. This should be the result of the previous setp.
-* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
-    * EN: You are a generic chatbot that always answers in English.
-    * ES: Eres un chatbot genérico que siempre responde en español.
-    * FR: Tu es un chatbot générique qui répond toujours en français.
-    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
-* `[OUTPUT_DATASET]` Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+positional arguments:
+  dataset_name          The input dataset, loaded from Huggingface datasets or disk. This should
+                        be the result of the previous step.
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force
+                        it to answer in the target language. Example: "You are a generic chatbot
+                        that always answers in English."
+  output_location       Where to write the Huggingface Dataset to. Can be a disk location or a
+                        Huggingface Dataset repository. Be sure to set up HF_TOKEN.
+
+options:
+  -h, --help            show this help message and exit
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The dataset's column name containing the actual text to translate.
+                        Defaults to text
+  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
+                        The dataset's column name containing the rank of an answer given to a
+                        prompt. Defaults to rank
+  --base_dataset_id_field BASE_DATASET_ID_FIELD
+                        The dataset's column name containing the id of a text. Defaults to
+                        message_id
+  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
+                        The dataset's column name containing the parent id of a text. Defaults to
+                        parent_id
+```
 
 5. Fine-tune LLaMa2-7B-chat (or another base model) using LoRA and PEFT.
 
-`python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]`
+```
+usage: finetune_llama.py [-h] [--base_model BASE_MODEL] tuned_model dataset_name
 
-Parameters:
+Finetune a base model using QLoRA and PEFT
 
-* `[BASE_MODEL]` The base foundation model. If you don't know which to use, we recommend [https://huggingface.co/NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf).
-* `[TUNED_MODEL]` The name of the resulting tuned model. This will be pushed to Huggingface directly. Make sure you have `HF_TOKEN` set as an environment variable.
-* `[DATASET_NAME]` The name of the dataset to use for finetuning.
+positional arguments:
+  tuned_model           The name of the resulting tuned model. This will be pushed to Huggingface.
+                        Ensure HF_TOKEN is set.
+  dataset_name          The name of the dataset to use for fine-tuning.
+
+options:
+  -h, --help            show this help message and exit
+  --base_model BASE_MODEL
+                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+```
 
 6. Run inference using the newly created QLoRA model.
 
-`python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]`
+```
+usage: run_inference.py [-h] model_name instruction_prompt input
 
-Parameters:
+Script to run inference on a tuned model.
 
-* `[TUNED_MODEL]` The name of the resulting tuned model that you pushed to Huggingface in the previous step.
-* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
-    * EN: You are a generic chatbot that always answers in English.
-    * ES: Eres un chatbot genérico que siempre responde en español.
-    * FR: Tu es un chatbot générique qui répond toujours en français.
-    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
-    * AR: أنت روبوت محادثة عام يجيب دائمًا باللغة العربية
-* `[INPUT]` The actual chat input prompt. Script is only meant for testing purposes and currently exits directly after answering. Run twice to incorporate the history of the previous answer.
+positional arguments:
+  model_name          The name of the tuned model that you pushed to Huggingface in the previous
+                      step.
+  instruction_prompt  An instruction message added to every prompt given to the chatbot to force
+                      it to answer in the target language.
+  input               The actual chat input prompt. The script is only meant for testing purposes
+                      and exits after answering.
+
+options:
+  -h, --help          show this help message and exit
+
+```
 
 # Datasets and models
 
@@ -162,7 +230,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
 - [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
 - [xaviviro/llama-2-7b-chat-ca](https://huggingface.co/xaviviro/llama-2-7b-chat-ca) QLoRA adapter for LLaMa2-7b-chat in Catalan.
-- - [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
+- [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
 - [HeshamHaroon/llama-2-7b-chat-ar](https://huggingface.co/HeshamHaroon/llama-2-7b-chat-ar) QLoRA adapter for LLaMa2-7b-chat in Arabic.
 - [UnderstandLing/llama-2-7b-chat-it](https://huggingface.co/UnderstandLing/llama-2-7b-chat-it) QLoRA adapter for LLaMa2-7b-chat in Italian.
 - [UnderstandLing/llama-2-7b-chat-ru](https://huggingface.co/UnderstandLing/llama-2-7b-chat-ru) QLoRA adapter for LLaMa2-7b-chat in Russian.
