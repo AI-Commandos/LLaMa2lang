@@ -6,7 +6,7 @@ from tqdm import tqdm
 import argparse
 
 # Function to format a thread in LLaMa2 format
-def format_thread(thread):
+def format_thread(thread, system_instruction):
     formatted_thread = f"<s>[INST] <<SYS>>\n{system_instruction}\n<</SYS>>\n\n"
 
     for i in range(0, len(thread), 2):
@@ -79,7 +79,7 @@ def main():
                 next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
         
             # Turn this into LLaMa2 format
-            threads[fold].append(format_thread(thread))
+            threads[fold].append(format_thread(thread, instruction_prompt))
             # Update progress
             pbar.update(1)
 
