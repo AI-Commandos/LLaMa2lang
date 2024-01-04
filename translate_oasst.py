@@ -19,6 +19,8 @@ import gc
 from tqdm import tqdm
 import argparse
 
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
 
@@ -136,7 +138,6 @@ def main():
 
     if checkpoint_n % batch_size != 0:
         raise Exception("Checkpoint N must be a multiple of batch size!")
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Load the open assistant/base dataset
     dataset = load_dataset(base_dataset)
