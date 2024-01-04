@@ -49,6 +49,8 @@ def get_helsinki_nlp_model(source_lang, target_lang):
     # Small fix for odd language codes
     if source_lang == 'pt-BR':
         source_lang = 'bzs'
+    if source_lang == 'uk-UA':
+        source_lang = 'uk'
     model_key = f'{source_lang}-{target_lang}'
 
     if model_key in model_cache:
