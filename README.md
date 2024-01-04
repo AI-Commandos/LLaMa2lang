@@ -128,6 +128,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) The oasst1 dataset translated to Russian.
 - [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) The oasst1 dataset translated to Hindi.
 - [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) The oasst1 dataset translated to Chinese.
+- [mpazdzioch/oasst1_pl] (https://huggingface.co/datasets/mpazdzioch/oasst1_pl) The oasst1 dataset translated to Polish.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
