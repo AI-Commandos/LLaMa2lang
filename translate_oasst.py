@@ -24,7 +24,8 @@ model_cache = {}
 
 # Alternative models that are not created by Helsink-NLP
 alternative_models = {
-    "en-pl": 'gsarti/opus-mt-tc-en-pl'
+    "en-pl": 'gsarti/opus-mt-tc-en-pl',
+    "en-ja": 'gsarti/opus-mt-tc-base-en-ja'
 }
 
 def load_model(model_name, model_key):
