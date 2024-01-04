@@ -47,7 +47,7 @@ def main():
     folds = dataset.keys()
     threads = {k: [] for k in folds}
     for fold in folds:
-    df = dataset[fold].to_pandas()
+        df = dataset[fold].to_pandas()
 
     # Replace NULLs in 'rank' with a value lower than the lowest rank
     min_rank = df['rank'].min()
