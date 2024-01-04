@@ -99,21 +99,27 @@ def find_largest_checkpoint(checkpoint_location):
         return 0
 
 # Group all records in a dataset by language so we can use a single model in a batched fashion
-def group_records_by_language(dataset):
+def group_records_by_language(dataset, lang_field):
     grouped_records = {}
     for record in dataset:
-        lang = record['lang']
+        lang = record[lang_field]
         if lang not in grouped_records:
             grouped_records[lang] = []
         grouped_records[lang].append(record)
     return grouped_records
 
 def main():
-    parser = argparse.ArgumentParser(description="Script for translation using Helsinki-NLP's OPUS models.")
+    parser = argparse.ArgumentParser(description="Translate a dataset (default: oasst1) to target language")
     parser.add_argument('target_lang', type=str, 
                         help="The target language, using language codes as used in Helsinki-NLP's OPUS translation models.")
     parser.add_argument('checkpoint_folder', type=str, 
                         help="The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.")
+    parser.add_argument('--base_dataset', type=str, default="OpenAssistant/oasst1",
+                        help="The base dataset to translate, defaults to OpenAssistant/oasst1")
+    parser.add_argument('--base_dataset_text_field', type=str, default="text",
+                        help="The base dataset's column name containing the actual text to translate. Defaults to text")
+    parser.add_argument('--base_dataset_lang_field', type=str, default="lang",
+                        help="The base dataset's column name containing the language the source text was written in. Defaults to lang")
     parser.add_argument('--checkpoint_n', type=int, default=400,
                         help="An integer representing how often a checkpoint file will be written out. For OASST1, 400 is a reasonable number.")
     parser.add_argument('--batch_size', type=int, default=20,
@@ -123,18 +129,21 @@ def main():
     checkpoint_folder = args.checkpoint_folder
     checkpoint_n = args.checkpoint_n
     batch_size = args.batch_size
+    base_dataset = args.base_dataset
+    base_dataset_text_field = args.base_dataset_text_field
+    base_dataset_lang_field = args.base_dataset_lang_field
 
     if checkpoint_n % batch_size != 0:
         raise Exception("Checkpoint N must be a multiple of batch size!")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
-    # Load the open assistant dataset
-    dataset = load_dataset("OpenAssistant/oasst1")
+    # Load the open assistant/base dataset
+    dataset = load_dataset(base_dataset)
 
     # Loop through the actual data and translate
     with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
         for fold in dataset:
-            records_by_lang = group_records_by_language(dataset[fold])
+            records_by_lang = group_records_by_language(dataset[fold], base_dataset_lang_field)
             
             for source_lang, records in records_by_lang.items():
                 lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
@@ -146,14 +155,14 @@ def main():
                 for cnt in range(last_checkpoint_n, len(records), batch_size):
                     # Translate a full batch
                     batch = records[cnt:cnt+batch_size]
-                    texts_to_translate = [record['text'] for record in batch]
+                    texts_to_translate = [record[base_dataset_text_field] for record in batch]
                     translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
 
                     if translated_batch is not None:
                         # Combine original record with translated text
                         for record, translation in zip(batch, translated_batch):
-                            record['text'] = translation
-                            record['lang'] = target_lang
+                            record[base_dataset_text_field] = translation
+                            record[base_dataset_lang_field] = target_lang
                             translated_texts.append(record)
                     
                     pbar.update(batch_size)
