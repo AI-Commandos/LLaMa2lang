@@ -2,6 +2,7 @@
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # Change info
+* **[2024-01-04]** We now support translation through MADLAD. Especially for models where Helsinki has a low BLEU score (less than 40), MADLAD is preferred. Using MADLAD also speeds up translation by 50% on average.
 * **[2024-01-04]** We now use argparser to parse command line arguments. Make sure you update your calls to our scripts accordingly. Use `-h` on all scripts to get help.
 * **[2023-12-29]** We now batch translations in `translate_oasst.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
 
@@ -28,7 +29,6 @@ python run_inference.py model_name instruction_prompt input
 
 # Roadmap
 * [L2L-2] Make the base model (llama2-7b-chat) configurable so you can also finetune Mistral, Mixtral or others.
-* [L2L-3] Investigate other/better translation models than HelsinkiNLP's OPUS
 * [L2L-4] Add DPO training as RLHF alternative
 * [L2L-5] Investigate multi-GPU support
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)

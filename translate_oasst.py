@@ -146,7 +146,7 @@ def main():
     parser.add_argument('--use_madlad', action='store_true',
                         help='Optional flag to use the MADLAD model google/madlad400-3b-mt. If set, the script will use MADLAD. Default is False.')
     parser.add_argument('--madlad_quant', action='store_true',
-                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized when loaded, adviced for <= 16GB vRAM')
+                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized when loaded, adviced for <= 16GB vRAM, also use batch_size <= 40 in that case')
 
     args = parser.parse_args()
     target_lang = args.target_lang
