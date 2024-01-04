@@ -31,7 +31,7 @@ def main():
                         help='The input dataset, loaded from Huggingface datasets or disk. This should be the result of the previous step.')
     parser.add_argument('instruction_prompt', type=str, 
                         help='An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."')
-    parser.add_argument('output_dataset', type=str,
+    parser.add_argument('output_location', type=str,
                         help='Where to write the Huggingface Dataset to. Can be a disk location or a Huggingface Dataset repository. Be sure to set up HF_TOKEN.')
     parser.add_argument('--base_dataset_text_field', type=str, default="text",
                         help="The dataset's column name containing the actual text to translate. Defaults to text")
@@ -44,7 +44,7 @@ def main():
     args = parser.parse_args()
     dataset_name = args.dataset_name
     instruction_prompt = args.instruction_prompt
-    output_dataset = args.output_dataset
+    output_location = args.output_location
     base_dataset_text_field = args.base_dataset_text_field
     base_dataset_rank_field = args.base_dataset_rank_field
     base_dataset_id_field = args.base_dataset_id_field
