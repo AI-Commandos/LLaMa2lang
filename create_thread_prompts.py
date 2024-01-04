@@ -19,7 +19,7 @@ def format_thread(thread):
     return formatted_thread
 
 # We only continue the thread with the highest ranked answer to each input
-def find_highest_ranked_child(parent_id):
+def find_highest_ranked_child(df, parent_id):
       children = df[df['parent_id'] == parent_id]
       if not children.empty:
           return children.loc[children['rank'].idxmax()]
@@ -33,10 +33,22 @@ def main():
                         help='An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."')
     parser.add_argument('output_dataset', type=str,
                         help='Where to write the Huggingface Dataset to. Can be a disk location or a Huggingface Dataset repository. Be sure to set up HF_TOKEN.')
+    parser.add_argument('--base_dataset_text_field', type=str, default="text",
+                        help="The dataset's column name containing the actual text to translate. Defaults to text")
+    parser.add_argument('--base_dataset_rank_field', type=str, default="rank",
+                        help="The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank")
+    parser.add_argument('--base_dataset_id_field', type=str, default="message_id",
+                        help="The dataset's column name containing the id of a text. Defaults to message_id")
+    parser.add_argument('--base_dataset_parent_field', type=str, default="parent_id",
+                        help="The dataset's column name containing the parent id of a text. Defaults to parent_id")
     args = parser.parse_args()
     dataset_name = args.dataset_name
     instruction_prompt = args.instruction_prompt
     output_dataset = args.output_dataset
+    base_dataset_text_field = args.base_dataset_text_field
+    base_dataset_rank_field = args.base_dataset_rank_field
+    base_dataset_id_field = args.base_dataset_id_field
+    base_dataset_parent_field = args.base_dataset_parent_field
 
     if os.path.isdir(dataset_name):
         dataset = load_from_disk(os.path.join(dataset_name))
@@ -49,22 +61,22 @@ def main():
     for fold in folds:
         df = dataset[fold].to_pandas()
 
-    # Replace NULLs in 'rank' with a value lower than the lowest rank
-    min_rank = df['rank'].min()
-    df['rank'].fillna(min_rank - 1, inplace=True)
+    # Replace NULLs in rank with a value lower than the lowest rank
+    min_rank = df[base_dataset_rank_field].min()
+    df[base_dataset_rank_field].fillna(min_rank - 1, inplace=True)
 
     # Identify root messages (those without a parent_id)
-    root_messages = df[df['parent_id'].isna()]
+    root_messages = df[df[base_dataset_parent_field].isna()]
 
     with tqdm(total=root_messages.size) as pbar:
         for _, root_message in root_messages.iterrows():
             # Create the thread
-            thread = [{'text': root_message['text']}]
-            next_message = find_highest_ranked_child(root_message['message_id'])
+            thread = [{'text': root_message[base_dataset_text_field]}]
+            next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field])
         
             while next_message is not None:
-                thread.append({'text': next_message['text']})
-                next_message = find_highest_ranked_child(next_message['message_id'])
+                thread.append({'text': next_message[base_dataset_text_field]})
+                next_message = find_highest_ranked_child(next_message[base_dataset_id_field])
         
             # Turn this into LLaMa2 format
             threads[fold].append(format_thread(thread))
