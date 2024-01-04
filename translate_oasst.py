@@ -9,6 +9,9 @@ from transformers import (
     TrainingArguments,
     pipeline,
     logging,
+    T5ForConditionalGeneration,
+    T5Tokenizer,
+    BitsAndBytesConfig
 )
 from peft import LoraConfig
 from trl import SFTTrainer
@@ -19,7 +22,7 @@ import gc
 from tqdm import tqdm
 import argparse
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
 # Cache for loaded translation models, seemingly faster than letting Huggingface handle it
 model_cache = {}
@@ -91,6 +94,19 @@ def batch_translate(texts, source_lang, target_lang, intermediate_lang = 'en'):
       translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in translated_outputs]
       return translated_texts
 
+def batch_translate_madlad(texts, target_lang):
+    # Get madlad
+    model, tokenizer = model_cache['madlad']
+    # Add the target language to the texts
+    madlad_texts = [f'<2{target_lang}> {text}' for text in texts]
+    input_ids = tokenizer(madlad_texts, padding=True, return_tensors="pt").to(device).input_ids
+    outputs = model.generate(input_ids=input_ids)
+
+    # Decoding outputs
+    translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+    return translated_texts
+    
+
 # Find the max checkpoint number to continue from
 def find_largest_checkpoint(checkpoint_location):
     pattern = r'upto_(\d+).json'
@@ -114,7 +130,7 @@ def group_records_by_language(dataset, lang_field):
 def main():
     parser = argparse.ArgumentParser(description="Translate a dataset (default: oasst1) to target language")
     parser.add_argument('target_lang', type=str, 
-                        help="The target language, using language codes as used in Helsinki-NLP's OPUS translation models.")
+                        help="The target language, using language codes as used in Helsinki-NLP's OPUS translation models OR the codes used by madlad (see original paper in the Appendix)")
     parser.add_argument('checkpoint_location', type=str, 
                         help="The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.")
     parser.add_argument('--base_dataset', type=str, default="OpenAssistant/oasst1",
@@ -127,6 +143,11 @@ def main():
                         help="An integer representing how often a checkpoint file will be written out. For OASST1, 400 is a reasonable number.")
     parser.add_argument('--batch_size', type=int, default=20,
                         help="The batch size for a single translation model. Adjust based on your GPU capacity. Default is 20.")
+    parser.add_argument('--use_madlad', action='store_true',
+                        help='Optional flag to use the MADLAD model google/madlad400-3b-mt. If set, the script will use MADLAD. Default is False.')
+    parser.add_argument('--madlad_quant', action='store_true',
+                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized when loaded, adviced for <= 16GB vRAM, also use batch_size <= 40 in that case')
+
     args = parser.parse_args()
     target_lang = args.target_lang
     checkpoint_location = args.checkpoint_location
@@ -135,12 +156,20 @@ def main():
     base_dataset = args.base_dataset
     base_dataset_text_field = args.base_dataset_text_field
     base_dataset_lang_field = args.base_dataset_lang_field
+    use_madlad = args.use_madlad
+    madlad_quant = args.madlad_quant
 
     if checkpoint_n % batch_size != 0:
         raise Exception("Checkpoint N must be a multiple of batch size!")
 
     # Load the open assistant/base dataset
     dataset = load_dataset(base_dataset)
+
+    # Set up madlad if required
+    if use_madlad:
+        model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, load_in_8bit=madlad_quant)
+        tokenizer = T5Tokenizer.from_pretrained("google/madlad400-3b-mt")
+        model_cache['madlad'] = (model, tokenizer)
 
     # Loop through the actual data and translate
     with tqdm(total=sum(len(split) for split in dataset.values())) as pbar:
@@ -158,7 +187,10 @@ def main():
                     # Translate a full batch
                     batch = records[cnt:cnt+batch_size]
                     texts_to_translate = [record[base_dataset_text_field] for record in batch]
-                    translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
+                    if not(use_madlad):
+                        translated_batch = batch_translate(texts_to_translate, source_lang, target_lang)
+                    else:
+                        translated_batch = batch_translate_madlad(texts_to_translate, target_lang)
 
                     if translated_batch is not None:
                         # Combine original record with translated text
