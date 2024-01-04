@@ -1,4 +1,4 @@
-from datasets import load_dataset, DatasetDict, Dataset
+from datasets import load_dataset, DatasetDict, Dataset, load_from_disk
 import sys
 import os
 import pandas as pd
@@ -28,7 +28,7 @@ def find_highest_ranked_child(parent_id):
 def main():
     parser = argparse.ArgumentParser(description="Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.")
     parser.add_argument('dataset_name', type=str, 
-                        help='The input dataset, loaded from Huggingface datasets. This should be the result of the previous step.')
+                        help='The input dataset, loaded from Huggingface datasets or disk. This should be the result of the previous step.')
     parser.add_argument('instruction_prompt', type=str, 
                         help='An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."')
     parser.add_argument('output_dataset', type=str,
