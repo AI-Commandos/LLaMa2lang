@@ -68,7 +68,7 @@ def main():
     # Identify root messages (those without a parent_id)
     root_messages = df[df[base_dataset_parent_field].isna()]
 
-    with tqdm(total=root_messages.size) as pbar:
+    with tqdm(total=len(root_messages)) as pbar:
         for _, root_message in root_messages.iterrows():
             # Create the thread
             thread = [{'text': root_message[base_dataset_text_field]}]
