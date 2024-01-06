@@ -214,7 +214,7 @@ def main():
                     json.dump(batch, f)
 
             # One source language down, release the memory
-            if device == 'cuda':
+            if device == 'cuda' and not(use_madlad):
                 gc.collect()
                 torch.cuda.empty_cache()
 
