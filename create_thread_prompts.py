@@ -59,6 +59,8 @@ def main():
     folds = dataset.keys()
     threads = {k: [] for k in folds}
     for fold in folds:
+        print(f"Creating threads for fold {fold}")
+        
         df = dataset[fold].to_pandas()
 
         # Replace NULLs in rank with a value lower than the lowest rank
