@@ -61,33 +61,31 @@ def main():
     for fold in folds:
         df = dataset[fold].to_pandas()
 
-    # Replace NULLs in rank with a value lower than the lowest rank
-    min_rank = df[base_dataset_rank_field].min()
-    df[base_dataset_rank_field].fillna(min_rank - 1, inplace=True)
+        # Replace NULLs in rank with a value lower than the lowest rank
+        min_rank = df[base_dataset_rank_field].min()
+        df[base_dataset_rank_field].fillna(min_rank - 1, inplace=True)
 
-    # Identify root messages (those without a parent_id)
-    root_messages = df[df[base_dataset_parent_field].isna()]
+        # Identify root messages (those without a parent_id)
+        root_messages = df[df[base_dataset_parent_field].isna()]
 
-    with tqdm(total=len(root_messages)) as pbar:
-        for _, root_message in root_messages.iterrows():
-            # Create the thread
-            thread = [{'text': root_message[base_dataset_text_field]}]
-            next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field])
-        
-            while next_message is not None:
-                thread.append({'text': next_message[base_dataset_text_field]})
-                next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
-        
-            # Turn this into LLaMa2 format
-            threads[fold].append(format_thread(thread, instruction_prompt))
-            # Update progress
-            pbar.update(1)
+        with tqdm(total=len(root_messages)) as pbar:
+            for _, root_message in root_messages.iterrows():
+                # Create the thread
+                thread = [{'text': root_message[base_dataset_text_field]}]
+                next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field])
+            
+                while next_message is not None:
+                    thread.append({'text': next_message[base_dataset_text_field]})
+                    next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
+            
+                # Turn this into LLaMa2 format
+                threads[fold].append(format_thread(thread, instruction_prompt))
+                # Update progress
+                pbar.update(1)
 
-    threads[fold] = Dataset.from_pandas(pd.DataFrame(data=threads[fold]))
+        threads[fold] = Dataset.from_pandas(pd.DataFrame(data=threads[fold])).rename_column('0', 'text')
 
     dataset = DatasetDict(threads)
-    for fold in folds:
-        dataset[fold] = dataset[fold].rename_column('0', 'text')
 
     # Check if output location is a valid directory
     if os.path.isdir(output_location):
