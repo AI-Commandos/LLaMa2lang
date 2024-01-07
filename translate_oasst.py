@@ -1,23 +1,15 @@
 import os
 import torch
-from datasets import load_dataset, DatasetDict, Dataset
+from datasets import load_dataset
 from transformers import (
-    AutoModelForCausalLM,
     AutoModelForSeq2SeqLM,
     AutoTokenizer,
-    BitsAndBytesConfig,
-    TrainingArguments,
-    pipeline,
-    logging,
     T5ForConditionalGeneration,
     T5Tokenizer,
     BitsAndBytesConfig
 )
-from peft import LoraConfig
-from trl import SFTTrainer
 import json
 import re
-import sys
 import gc
 from tqdm import tqdm
 import argparse
@@ -104,6 +96,9 @@ def batch_translate_madlad(texts, target_lang):
 
     # Decoding outputs
     translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+    if len([t for t in translated_texts if t == '']) > 0:
+        print(texts)
+        raise Exception("Failed to translate properly")
     return translated_texts
     
 
@@ -146,7 +141,9 @@ def main():
     parser.add_argument('--use_madlad', action='store_true',
                         help='Optional flag to use the MADLAD model google/madlad400-3b-mt. If set, the script will use MADLAD. Default is False.')
     parser.add_argument('--madlad_quant', action='store_true',
-                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized when loaded, adviced for <= 16GB vRAM, also use batch_size <= 40 in that case')
+                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized to 8 bits when loaded, adviced for <= 16GB vRAM, also use batch_size <= 40 in that case')
+    parser.add_argument('--madlad_quant4', action='store_true',
+                        help='Optional flag that can be set when using MADLAD through use_madlad. If set, the MADLAD model is quantized to 4 bits when loaded.')
 
     args = parser.parse_args()
     target_lang = args.target_lang
@@ -158,6 +155,7 @@ def main():
     base_dataset_lang_field = args.base_dataset_lang_field
     use_madlad = args.use_madlad
     madlad_quant = args.madlad_quant
+    madlad_quant4 = args.madlad_quant4
 
     if checkpoint_n % batch_size != 0:
         raise Exception("Checkpoint N must be a multiple of batch size!")
@@ -167,7 +165,19 @@ def main():
 
     # Set up madlad if required
     if use_madlad:
-        model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, load_in_8bit=madlad_quant)
+        if madlad_quant4:
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch.bfloat16
+            )
+            model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, bnb_config=bnb_config, load_in_4bit=True)
+        else:
+            if madlad_quant:
+                model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, load_in_8bit=True)
+            else:
+                model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device)
         tokenizer = T5Tokenizer.from_pretrained("google/madlad400-3b-mt")
         model_cache['madlad'] = (model, tokenizer)
 
