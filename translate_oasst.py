@@ -172,7 +172,7 @@ def main():
                 bnb_4bit_quant_type="nf4",
                 bnb_4bit_compute_dtype=torch.bfloat16
             )
-            model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, bnb_config=bnb_config, load_in_4bit=True)
+            model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, quantization_config=bnb_config, load_in_4bit=True)
         else:
             if madlad_quant:
                 model = T5ForConditionalGeneration.from_pretrained("google/madlad400-3b-mt", device_map=device, load_in_8bit=True)
