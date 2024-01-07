@@ -92,7 +92,7 @@ def batch_translate_madlad(texts, target_lang):
     # Add the target language to the texts
     madlad_texts = [f'<2{target_lang}> {text}' for text in texts]
     input_ids = tokenizer(madlad_texts, padding=True,truncation=True, max_length=512, return_tensors="pt").to(device).input_ids
-    outputs = model.generate(input_ids=input_ids, max_new_tokens=2048)
+    outputs = model.generate(input_ids=input_ids, max_new_tokens=512)
 
     # Decoding outputs
     translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
