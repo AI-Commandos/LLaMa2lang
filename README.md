@@ -33,6 +33,8 @@ python run_inference.py model_name instruction_prompt input
 * [L2L-5] Investigate multi-GPU support
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
+* [L2L-8] Add mBART translation as an option
+* [L2L-9] Add m2m translation as an option
 
 # What it does
 The process we follow to tune LLaMa2 for a specific language is as follows:
