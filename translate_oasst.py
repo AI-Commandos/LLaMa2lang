@@ -68,21 +68,21 @@ def batch_translate(texts, source_lang, target_lang, intermediate_lang = 'en'):
         return None
 
       # To intermediate language first
-      inputs = tokenizer_i(texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(device)
+      inputs = tokenizer_i(texts, padding=True, truncation=True, max_length=1024, return_tensors="pt").to(device)
       with torch.no_grad():
-          translated_outputs = model_i.generate(inputs.input_ids, max_length=512)
+          translated_outputs = model_i.generate(inputs.input_ids, max_length=1024)
       intermediate_texts = [tokenizer_i.decode(output, skip_special_tokens=True) for output in translated_outputs]
 
       # Now to target
-      inputs = tokenizer_t(intermediate_texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(device)
+      inputs = tokenizer_t(intermediate_texts, padding=True, truncation=True, max_length=1024, return_tensors="pt").to(device)
       with torch.no_grad():
-          translated_outputs = model_t.generate(inputs.input_ids, max_length=512)
+          translated_outputs = model_t.generate(inputs.input_ids, max_length=1024)
       translated_texts = [tokenizer_t.decode(output, skip_special_tokens=True) for output in translated_outputs]
       return translated_texts
     else:
-      inputs = tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(device)
+      inputs = tokenizer(texts, padding=True, truncation=True, max_length=1024, return_tensors="pt").to(device)
       with torch.no_grad():
-          translated_outputs = model.generate(inputs.input_ids, max_length=512)
+          translated_outputs = model.generate(inputs.input_ids, max_length=1024)
       translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in translated_outputs]
       return translated_texts
 
@@ -90,12 +90,12 @@ def batch_translate_madlad(texts, target_lang):
     # Get madlad
     model, tokenizer = model_cache['madlad']
     # Add the target language to the texts
-    madlad_texts = [f'<2{target_lang}> {text}' for text in texts]
-    input_ids = tokenizer(madlad_texts, padding=True,truncation=True, max_length=512, return_tensors="pt").to(device).input_ids
-    outputs = model.generate(input_ids=input_ids, max_new_tokens=512)
+    madlad_texts = [f'<2{target_lang}> ' + text.replace("\n", " ") for text in texts]
+    input_ids = tokenizer(madlad_texts, max_length=1024, return_tensors="pt").to(device)
+    outputs = model.generate(**input_ids, max_new_tokens=1024)
 
     # Decoding outputs
-    translated_texts = [tokenizer.decode(output, skip_special_tokens=True) for output in outputs]
+    translated_texts = tokenizer.batch_decode(outputs, skip_special_tokens=True)
     if len([t for t in translated_texts if t == '']) > 0:
         print(texts)
         raise Exception("Failed to translate properly")
