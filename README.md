@@ -33,6 +33,8 @@ python run_inference.py model_name instruction_prompt input
 * [L2L-5] Investigate multi-GPU support
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
+* [L2L-8] Add mBART translation as an option
+* [L2L-9] Add m2m translation as an option
 
 # What it does
 The process we follow to tune LLaMa2 for a specific language is as follows:
@@ -252,13 +254,13 @@ We have created and will continue to create numerous datasets and models already
 
 ## Dutch
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s><s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.`
 
 # FAQ
 
