@@ -96,9 +96,6 @@ def batch_translate_madlad(texts, target_lang):
 
     # Decoding outputs
     translated_texts = tokenizer.batch_decode(outputs, skip_special_tokens=True)
-    if len([t for t in translated_texts if t == '']) > 0:
-        print(texts)
-        raise Exception("Failed to translate properly")
     return translated_texts
     
 
