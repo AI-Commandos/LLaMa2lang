@@ -8,7 +8,7 @@ import argparse
 def main():
     parser = argparse.ArgumentParser(description="Combine checkpoint files from translation.")
     parser.add_argument('input_folder', type=str, 
-                        help='The checkpoint folder used in translation, with the target language appended. Example: "./checkpoints/nl".')
+                        help='The checkpoint folder used in translation, with the target language appended. Example: "./checkpoints_nl".')
     parser.add_argument('output_location', type=str,
                         help='Where to write the Huggingface Dataset. Can be a disk location or a Huggingface Dataset repository.')
     args = parser.parse_args()

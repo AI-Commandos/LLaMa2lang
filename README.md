@@ -1,10 +1,15 @@
-# LLaMa2lang v0.2
+# LLaMa2lang v0.3
 This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # Change info
-* **[2024-01-04]** We now support translation through MADLAD. Especially for models where Helsinki has a low BLEU score (less than 40), MADLAD is preferred. Using MADLAD drastically slows down training time, especially if you quantize (4 bit is even slower than 8 bit).
+_v0.3_
+* **[2024-01-09]** We have significantly refactored the translation process. Please follow the readme carefully if you come from v0.2.
+* **[2024-01-09]** We now support translation through M2M.
+* **[2024-01-04]** We now support translation through MADLAD. Especially for models where Helsinki has a low BLEU score (less than 40), MADLAD (or the faster M2M) is preferred. Using MADLAD drastically slows down training time, especially if you quantize (4 bit is even slower than 8 bit).
 * **[2024-01-04]** We now use argparser to parse command line arguments. Make sure you update your calls to our scripts accordingly. Use `-h` on all scripts to get help.
-* **[2023-12-29]** We now batch translations in `translate_oasst.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
+
+_v0.2_
+* **[2023-12-29]** We now batch translations in `translate.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
 
 # TL;DR
 
@@ -12,7 +17,7 @@ This repository contains convenience scripts to finetune LLaMa2-7b for chat towa
 pip install -r requirements.txt
 
 # Translate OASST1 to target language
-python translate_oasst.py target_lang checkpoint_location
+python translate.py m2m target_lang checkpoint_location
 
 # Combine the checkpoint files into a dataset
 python combine_checkpoints.py input_folder output_location
@@ -27,27 +32,33 @@ python finetune_llama.py tuned_model dataset_name
 python run_inference.py model_name instruction_prompt input
 ```
 
+# What it does
+The process we follow to tune a foundation model such as LLaMa2 for a specific language is as follows:
+
+1. Load a dataset that contains Q&A/instruction pairs.
+2. Translate the entire dataset to a given target language.
+3. Load the translated dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
+4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
+5. Use QLoRA and PEFT to finetune a base foundation model's instruct finetune on this dataset.
+
+# Supported paradigms
+## Translation
+* OPUS
+* M2M
+* MADLAD
+## Base datasets
+The following have been tested but potentially more will work
+* OASST1
+* OASST2
+## Supported foundation models
+* LLaMa2
+* Mistral
+* (Unofficial) Mixtral 8x7B
+
 # Roadmap
-* [L2L-2] Make the base model (llama2-7b-chat) configurable so you can also finetune Mistral, Mixtral or others.
 * [L2L-4] Add DPO training as RLHF alternative
-* [L2L-5] Investigate multi-GPU support
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
-* [L2L-8] Add mBART translation as an option
-* [L2L-9] Add m2m translation as an option
-
-# What it does
-The process we follow to tune LLaMa2 for a specific language is as follows:
-
-1. We use the [Open Assistant dataset](https://huggingface.co/datasets/OpenAssistant/oasst1) from Huggingface as our base instruct data.
-2. The dataset is fully translated into a specific target language using [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP). This follows a two-step process:
-
-    2.1 Try to translate from the source language specified in OASST1 to the desired target language using a model for that language pair.
-
-    2.2 If there is no such model, try to translate from the source language to English first and then from English to the target language.
-3. Load the translated OASST1 dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
-4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
-5. Use QLoRA and PEFT to finetune LLaMa2-chat on this dataset.
 
 ## Cost and runtime
 
@@ -62,39 +73,54 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 
 `pip install -r requirements.txt`
 
-2. Translate the OASST1 dataset into your target language. This script writes out intermediate results to a `checkpoint_location` because its runtime is quite lengthy (about 30-40 hours on a T4 Google Colab GPU).
+2. Translate your base dataset to your designated target language.
 
 ```
-usage: translate_oasst.py [-h] [--base_dataset BASE_DATASET]
-                          [--base_dataset_text_field BASE_DATASET_TEXT_FIELD]
-                          [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
-                          [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE]
-                          target_lang checkpoint_location
+usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
+                    [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
+                    {opus,madlad,m2m} ... target_lang checkpoint_location
 
-Translate a dataset (default: oasst1) to target language
+Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
 positional arguments:
-  target_lang           The target language, using language codes as used in Helsinki-NLP's OPUS
-                        translation models.
-  checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder
-                        will be created if it doesn't exist.
+  {opus,madlad,m2m}     The model/architecture used for translation.
+    opus                Translate the dataset using HelsinkiNLP OPUS models.
+    madlad              Translate the dataset using Google's MADLAD models.
+    m2m                 Translate the dataset using Facebook's M2M models.
+  target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
+  checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
 
 options:
   -h, --help            show this help message and exit
+  --quant8              Optional flag to load the translation model in 8 bits. Decreases memory usage, increases running time
+  --quant4              Optional flag to load the translation model in 4 bits. Decreases memory usage, increases running time
   --base_dataset BASE_DATASET
                         The base dataset to translate, defaults to OpenAssistant/oasst1
   --base_dataset_text_field BASE_DATASET_TEXT_FIELD
-                        The base dataset's column name containing the actual text to translate.
-                        Defaults to text
+                        The base dataset's column name containing the actual text to translate. Defaults to text
   --base_dataset_lang_field BASE_DATASET_LANG_FIELD
-                        The base dataset's column name containing the language the source text was
-                        written in. Defaults to lang
+                        The base dataset's column name containing the language the source text was written in. Defaults to lang
   --checkpoint_n CHECKPOINT_N
-                        An integer representing how often a checkpoint file will be written out.
-                        For OASST1, 400 is a reasonable number.
+                        An integer representing how often a checkpoint file will be written out. To start off, 400 is a reasonable number.
   --batch_size BATCH_SIZE
-                        The batch size for a single translation model. Adjust based on your GPU
-                        capacity. Default is 20.
+                        The batch size for a single translation model. Adjust based on your GPU capacity. Default is 10.
+  --max_length MAX_LENGTH
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is unlimited.
+  --cpu                 Forces usage of CPU. By default GPU is taken if available.
+```
+
+If you want more parameters for the different translation models, run:
+```
+python translate.py [MODEL] -h
+```
+
+Example calls:
+```
+# Using M2M with 4bit quantization and differen batch sizes to translate Dutch
+python translate.py m2m nl ./output_nl --quant4 --batch_size 20
+
+# Using madlad 7B with 8bit quantization for German with different max_length
+python translate.py madlad de ./output_de --quant8 --batch_size 5 --max_length 512 --model_size 7b
 ```
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
@@ -106,7 +132,7 @@ Combine checkpoint files from translation.
 
 positional arguments:
   input_folder     The checkpoint folder used in translation, with the target language appended.
-                   Example: "./checkpoints/nl".
+                   Example: "./output_nl".
   output_location  Where to write the Huggingface Dataset. Can be a disk location or a Huggingface
                    Dataset repository.
 
@@ -151,7 +177,7 @@ options:
                         parent_id
 ```
 
-5. Fine-tune LLaMa2-7B-chat (or another base model) using LoRA and PEFT.
+5. Fine-tune a foundate model's instruct using LoRA and PEFT.
 
 ```
 usage: finetune_llama.py [-h] [--base_model BASE_MODEL] tuned_model dataset_name
@@ -191,9 +217,9 @@ options:
 
 # Datasets and models
 
-We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repor and create datasets and models for other languages, then create a PR.
+We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repo and create datasets and models for other languages, then create a PR.
 
-## Translated oasst1 datasets
+## Translated oasst1 datasets using OPUS
 
 - [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) The oasst1 dataset translated to Dutch.
 - [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) The oasst1 dataset translated to Spanish.
@@ -272,3 +298,6 @@ We have created and will continue to create numerous datasets and models already
 
 * Q: Can I use other frameworks for fine-tuning?
 * A: Yes you can, we use [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) for training on multi-GPU setups.
+
+# Funding
+We are based in the Netherland and actively looking for funding to democratize AI and advance its applications. Contact us at funding@understandling.com if you want to invest.
