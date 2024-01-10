@@ -148,6 +148,10 @@ def main():
                         with open(os.path.join(lang_checkpoint_location, f'upto_{str(cnt + batch_size)}.json'), 'w', encoding='utf-8') as f:
                             json.dump(translated_texts, f)
                         translated_texts = []
+                        # Free some memory
+                        gc.collect()
+                        if device == 'cuda':
+                            torch.cuda.empty_cache()
 
                 # Write checkpoint
                 checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{cnt}.json')
@@ -155,8 +159,8 @@ def main():
                     json.dump(batch, f)
 
             # One source language down, release the memory
-            if device == 'cuda' and model == 'opus':
-                gc.collect()
+            gc.collect()
+            if device == 'cuda':
                 torch.cuda.empty_cache()
 
 if __name__ == "__main__":
