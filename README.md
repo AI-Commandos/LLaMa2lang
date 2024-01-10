@@ -240,6 +240,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) The oasst1 dataset translated to Chinese.
 - [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) The oasst1 dataset translated to Polish.
 - [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) The oasst1 dataset translate to Japanese.
+- [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) The oasst1 dataset translated to Basque.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
@@ -255,6 +256,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Hindi.
 - [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Chinese.
 - [chrystians/Jestes](https://huggingface.co/datasets/chrystians/Jestes) The LLaMa2 chat prompts with history from threads in oasst1 for Polish.
+- [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Basque.
 
 
 ## Language-specific LLaMa2-7B chat model adapters
