@@ -149,7 +149,7 @@ def main():
                         translated_texts = []
                         # Free some memory
                         gc.collect()
-                        if device == 'cuda':
+                        if device.startswith('cuda'):
                             torch.cuda.empty_cache()
 
                 # Write checkpoint
@@ -159,7 +159,7 @@ def main():
 
             # One source language down, release the memory
             gc.collect()
-            if device == 'cuda':
+            if device.startswith('cuda'):
                 torch.cuda.empty_cache()
 
 if __name__ == "__main__":
