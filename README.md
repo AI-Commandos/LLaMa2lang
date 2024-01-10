@@ -46,6 +46,7 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * OPUS
 * M2M
 * MADLAD
+* mBART
 ## Base datasets
 The following have been tested but potentially more will work
 * OASST1
@@ -78,13 +79,15 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 ```
 usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
                     [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
-                    {opus,madlad,m2m} ... target_lang checkpoint_location
+                    {opus,mbart,madlad,m2m} ... target_lang checkpoint_location
 
 Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
 positional arguments:
-  {opus,madlad,m2m}     The model/architecture used for translation.
+  {opus,mbart,madlad,m2m}
+                        The model/architecture used for translation.
     opus                Translate the dataset using HelsinkiNLP OPUS models.
+    mbart               Translate the dataset using mBART.
     madlad              Translate the dataset using Google's MADLAD models.
     m2m                 Translate the dataset using Facebook's M2M models.
   target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
@@ -121,6 +124,9 @@ python translate.py m2m nl ./output_nl --quant4 --batch_size 20
 
 # Using madlad 7B with 8bit quantization for German with different max_length
 python translate.py madlad de ./output_de --quant8 --batch_size 5 --max_length 512 --model_size 7b
+
+# Be sure to use target language codes that the model you use understands
+python translate.py mbart xh_ZA ./output_xhosa
 ```
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
@@ -280,24 +286,27 @@ We have created and will continue to create numerous datasets and models already
 
 ## Dutch
 
-`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s>`
 
-`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s>`
 
-`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s><s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s><s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland</s>`
 
-`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.</s>`
 
 # FAQ
 
-* Q: Why do you translate the full OASST1 dataset first? Wouldn't it be faster to only translate highest ranked threads?
-* A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1 translations to the community as we believe they can be useful on their own.
+* Q: Why do you translate the full OASST1/2 dataset first? Wouldn't it be faster to only translate highest ranked threads?
+* A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1/2 translations to the community as we believe they can be useful on their own.
 
 * Q: How well do the fine-tunes perform compared to vanilla LLaMa2?
 * A: While we do not have formal benchmarks, getting LLaMa2 to consistently speak another language than English to begin with is challenging if not impossible. The non-English language it does produce is often grammatically broken. Our fine-tunes do not show this behavior.
 
 * Q: Can I use other frameworks for fine-tuning?
 * A: Yes you can, we use [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) for training on multi-GPU setups.
+
+* Q: Can I mix different translation models?
+* A: Absolutely, we think it might even increase performance to have translation done by multiple models. You can achieve this by early-stopping a translation and continuing from the checkpoints by reruning the translate script with a different translation model.
 
 # Funding
 We are based in the Netherland and actively looking for funding to democratize AI and advance its applications. Contact us at funding@understandling.com if you want to invest.

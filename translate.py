@@ -1,13 +1,7 @@
 import os
 import torch
 from datasets import load_dataset
-from transformers import (
-    AutoModelForSeq2SeqLM,
-    AutoTokenizer,
-    T5ForConditionalGeneration,
-    T5Tokenizer,
-    BitsAndBytesConfig
-)
+from transformers import BitsAndBytesConfig
 import json
 import re
 import gc
@@ -15,6 +9,7 @@ from tqdm import tqdm
 import argparse
 from translators.m2m import M2MTranslator
 from translators.madlad import MADLADTranslator
+from translators.mbart import mBARTTranslator
 from translators.opus import OPUSTranslator
 
 
@@ -68,6 +63,8 @@ def main():
 
     parser_opus = subparsers.add_parser('opus', help='Translate the dataset using HelsinkiNLP OPUS models.')
 
+    parser_mbart = subparsers.add_parser('mbart', help='Translate the dataset using mBART.')
+
     parser_madlad = subparsers.add_parser('madlad', help='Translate the dataset using Google\'s MADLAD models.')
     parser_madlad.add_argument('--model_size', type=str, default="3b", choices=['3b', '7b', '7b-bt'], help='The size of the MADLAD model to use. 7b-bt is the backtrained version (best to avoid unless you know what you are doing).')
 
@@ -112,6 +109,8 @@ def main():
         translator = MADLADTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     elif model == 'm2m':
         translator = M2MTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
+    elif model == 'mbart':
+        translator = mBARTTranslator(device, quant4, quant4_config, quant8, args.max_length)
     else:
         translator = OPUSTranslator(device, quant4, quant4_config, quant8, args.max_length)
 

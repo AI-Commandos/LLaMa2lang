@@ -28,7 +28,8 @@ class OPUSTranslator(BaseTranslator):
 
                 # To intermediate language first
                 if self.max_length is None:
-                    inputs = tokenizer_i(texts, padding=True, return_tensors="pt").to(self.device)
+                    # OPUS crashes if we pass it more than 512 tokens
+                    inputs = tokenizer_i(texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(self.device)
                     translated_outputs = model_i.generate(inputs.input_ids)
                 else:
                     inputs = tokenizer_i(texts, padding=True, truncation=True, return_tensors="pt", max_length=self.max_length).to(self.device)
@@ -37,7 +38,7 @@ class OPUSTranslator(BaseTranslator):
 
                 # Now to target
                 if self.max_length is None:
-                    inputs = tokenizer_t(intermediate_texts, padding=True, return_tensors="pt").to(self.device)
+                    inputs = tokenizer_t(intermediate_texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(self.device)
                     translated_outputs = model_t.generate(inputs.input_ids)
                 else:
                     inputs = tokenizer_t(intermediate_texts, padding=True, truncation=True, return_tensors="pt", max_length=self.max_length).to(self.device)
@@ -46,7 +47,7 @@ class OPUSTranslator(BaseTranslator):
                 return translated_texts
             else:
                 if self.max_length is None:
-                    inputs = tokenizer(texts, padding=True, return_tensors="pt").to(self.device)
+                    inputs = tokenizer(texts, padding=True, truncation=True, max_length=512, return_tensors="pt").to(self.device)
                     translated_outputs = model.generate(inputs.input_ids)
                 else:
                     inputs = tokenizer(texts, padding=True, truncation=True, return_tensors="pt", max_length=self.max_length).to(self.device)

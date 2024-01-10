@@ -27,6 +27,11 @@ class MADLADTranslator(BaseTranslator):
         self.tokenizer = tokenizer
 
     def translate(self, texts, source_lang, target_lang):
+        # Small fix for odd language codes
+        if source_lang == 'pt-BR':
+            source_lang = 'pt'
+        if source_lang == 'uk-UA':
+            source_lang = 'uk'
         with torch.no_grad():
             # Preprocess texts and add target language prefix
             madlad_texts = [f'<2{target_lang}> ' + text.replace("\n", " ") for text in texts]
