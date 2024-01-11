@@ -7,7 +7,7 @@ import argparse
 
 # Function to format a thread in LLaMa2 format
 def format_thread(thread, system_instruction):
-    formatted_thread = f"<s>[INST] <<SYS>>\n{system_instruction}\n<</SYS>>\n\n"
+    formatted_thread = f"[INST] <<SYS>>\n{system_instruction}\n<</SYS>>\n\n"
 
     for i in range(0, len(thread), 2):
         user_msg = thread[i]['text'] if i < len(thread) else ""
