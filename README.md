@@ -117,13 +117,13 @@ If you want more parameters for the different translation models, run:
 python translate.py [MODEL] -h
 ```
 
-Example calls:
+Be sure to specify model-specific parameters first before you specify common parameters from the list above. Example calls:
 ```
 # Using M2M with 4bit quantization and differen batch sizes to translate Dutch
 python translate.py m2m nl ./output_nl --quant4 --batch_size 20
 
 # Using madlad 7B with 8bit quantization for German with different max_length
-python translate.py madlad de ./output_de --quant8 --batch_size 5 --max_length 512 --model_size 7b
+python translate.py madlad --model_size 7b de ./output_de --quant8 --batch_size 5 --max_length 512
 
 # Be sure to use target language codes that the model you use understands
 python translate.py mbart xh_ZA ./output_xhosa
