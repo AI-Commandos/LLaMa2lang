@@ -77,19 +77,19 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 2. Translate your base dataset to your designated target language.
 
 ```
-usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
-                    [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
-                    {opus,mbart,madlad,m2m} ... target_lang checkpoint_location
+usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD] [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
+                    {opus,mbart,madlad,m2m,nllb} ... target_lang checkpoint_location
 
 Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
 positional arguments:
-  {opus,mbart,madlad,m2m}
+  {opus,mbart,madlad,m2m,nllb}
                         The model/architecture used for translation.
     opus                Translate the dataset using HelsinkiNLP OPUS models.
     mbart               Translate the dataset using mBART.
     madlad              Translate the dataset using Google's MADLAD models.
     m2m                 Translate the dataset using Facebook's M2M models.
+    nllb                Translate the dataset using Facebook's NLLB models.
   target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
   checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
 
@@ -127,6 +127,7 @@ python translate.py madlad --model_size 7b de ./output_de --quant8 --batch_size 
 
 # Be sure to use target language codes that the model you use understands
 python translate.py mbart xh_ZA ./output_xhosa
+python translate.py nllb nld_Latn ./output_nl
 ```
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).

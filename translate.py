@@ -10,6 +10,7 @@ import argparse
 from translators.m2m import M2MTranslator
 from translators.madlad import MADLADTranslator
 from translators.mbart import mBARTTranslator
+from translators.nllb import NLLBTranslator
 from translators.opus import OPUSTranslator
 
 
@@ -70,6 +71,9 @@ def main():
 
     parser_m2m = subparsers.add_parser('m2m', help='Translate the dataset using Facebook\'s M2M models.')
     parser_m2m.add_argument('--model_size', type=str, default="418M", choices=['418M', '1.2B'], help='The size of the M2M model to use. Default is 418M')
+
+    parser_nllb = subparsers.add_parser('nllb', help='Translate the dataset using Facebook\'s NLLB models.')
+    parser_nllb.add_argument('--model_size', type=str, default="distilled-600M", choices=['distilled-600M', '1.3B', 'distilled-1.3B', '3.3B'], help='The size of the NLLB model to use. Default is distilled-600M')
     
 
     # Default arguments shared across models
@@ -111,6 +115,8 @@ def main():
         translator = M2MTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     elif model == 'mbart':
         translator = mBARTTranslator(device, quant4, quant4_config, quant8, args.max_length)
+    elif model == 'nllb':
+        translator = NLLBTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     else:
         translator = OPUSTranslator(device, quant4, quant4_config, quant8, args.max_length)
 
