@@ -240,6 +240,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) The oasst1 dataset translated to Chinese.
 - [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) The oasst1 dataset translated to Polish.
 - [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) The oasst1 dataset translate to Japanese.
+- [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) The oasst1 dataset translated to Basque.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
@@ -255,6 +256,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Hindi.
 - [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Chinese.
 - [chrystians/Jestes](https://huggingface.co/datasets/chrystians/Jestes) The LLaMa2 chat prompts with history from threads in oasst1 for Polish.
+- [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Basque.
 
 
 ## Language-specific LLaMa2-7B chat model adapters
@@ -271,6 +273,7 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/llama-2-7b-chat-hi](https://huggingface.co/UnderstandLing/llama-2-7b-chat-hi) QLoRA adapter for LLaMa2-7b-chat in Hindi.
 - [UnderstandLing/llama-2-7b-chat-zh](https://huggingface.co/UnderstandLing/llama-2-7b-chat-zh) QLoRA adapter for LLaMa2-7b-chat in Chinese.
 - [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) QLoRA adapter for LLaMa2-7b-chat in Polish.
+- [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
 
 ## Language-specific LLaMa2-13B chat model adapters
 
