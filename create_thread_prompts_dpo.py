@@ -20,7 +20,7 @@ def format_thread(thread, system_instruction):
 
 def format_dpo(thread, system_instruction, bad_child):
     formatted_thread = {
-        'prompt': f"<s>[INST] <<SYS>>\n{system_instruction}\n<</SYS>>\n\n"
+        'prompt': f"[INST] <<SYS>>\n{system_instruction}\n<</SYS>>\n\n"
     }
 
     for i in range(0, len(thread) - 2, 2):
@@ -31,8 +31,8 @@ def format_dpo(thread, system_instruction, bad_child):
             formatted_thread['prompt'] += f"<s>[INST] "
 
     formatted_thread['prompt'] += f"{thread[len(thread) - 2]['text']} [/INST]"
-    formatted_thread['chosen'] = f"{thread[len(thread) - 1]['text']} </s>"
-    formatted_thread['rejected'] = f"{bad_child[1]['text']} </s>"
+    formatted_thread['chosen'] = f"{thread[len(thread) - 1]['text']}"
+    formatted_thread['rejected'] = f"{bad_child[1]['text']}"
 
     return formatted_thread
 
