@@ -61,6 +61,8 @@ The following have been tested but potentially more will work
 * [L2L-4] Add DPO training as RLHF alternative
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
+* [L2L-10] Support extending the tokenizer and vocabulary
+* [L2L-11] Support more chat prompt formats
 
 ## Cost and runtime
 
