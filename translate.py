@@ -67,7 +67,7 @@ def main():
     parser_mbart = subparsers.add_parser('mbart', help='Translate the dataset using mBART.')
 
     parser_madlad = subparsers.add_parser('madlad', help='Translate the dataset using Google\'s MADLAD models.')
-    parser_madlad.add_argument('--model_size', type=str, default="3b", choices=['3b', '7b', '7b-bt'], help='The size of the MADLAD model to use. 7b-bt is the backtrained version (best to avoid unless you know what you are doing).')
+    parser_madlad.add_argument('--model_size', type=str, default="3b", choices=['3b', '7b', '7b-bt', '10b'], help='The size of the MADLAD model to use. 7b-bt is the backtrained version (best to avoid unless you know what you are doing).')
 
     parser_m2m = subparsers.add_parser('m2m', help='Translate the dataset using Facebook\'s M2M models.')
     parser_m2m.add_argument('--model_size', type=str, default="418M", choices=['418M', '1.2B'], help='The size of the M2M model to use. Default is 418M')
