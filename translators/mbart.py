@@ -92,4 +92,4 @@ class mBARTTranslator(BaseTranslator):
             if not(source_lang in self.printed_error_langs):
                 print(f"[---- LLaMa2Lang ----] mBART cannot translate from source language {source_lang}, returning originals")
                 self.printed_error_langs[source_lang] = True
-            return texts
+            return None

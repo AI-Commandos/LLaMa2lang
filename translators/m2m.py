@@ -30,6 +30,9 @@ class M2MTranslator(BaseTranslator):
         if source_lang == 'uk-UA':
             source_lang = 'uk'
         with torch.no_grad():
+            if source_lang == 'eu':
+                # Not supported by M2M
+                return None
             # Set the source language for the tokenizer
             self.tokenizer.src_lang = source_lang
             if self.max_length is None:
