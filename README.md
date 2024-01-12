@@ -223,9 +223,11 @@ options:
 ```
 
 # Choosing the right translation model
-> Question: How do I know which translation model to choose for my target language?
+> How do I know which translation model to choose for my target language?
 
-We have you covered with out `benchmark.py` script that helps make somewhat of a good guess (the dataset we use is the same as the OPUS models are trained on so the outcomes are always favorable towards OPUS). For usage, see the help of this script below. Models are loaded in 4-bit quantization and run on a small sample of the OPUS books subset.
+**We got you covered** with out `benchmark.py` script that helps make somewhat of a good guess (the dataset we use is the same as the OPUS models are trained on so the outcomes are always favorable towards OPUS). For usage, see the help of this script below. Models are loaded in 4-bit quantization and run on a small sample of the OPUS books subset.
+
+Be sure to use the most commonly occurring languages in your base dataset as source_language and your target translation language as target_language. For OASST1 for example, be sure to at least run `en` and `es` as source languages.
 
 ```
 usage: benchmark.py [-h] [--cpu] [--start START] [--n N] [--max_length MAX_LENGTH] source_language target_language included_models
