@@ -3,6 +3,7 @@ This repository contains convenience scripts to finetune LLaMa2-7b for chat towa
 
 # Change info
 _v0.3_
+* **[2024-01-12]** You can now benchmark different translation models using `benchmark.py`.
 * **[2024-01-09]** We have significantly refactored the translation process. Please follow the readme carefully if you come from v0.2.
 * **[2024-01-09]** We now support translation through M2M.
 * **[2024-01-04]** We now support translation through MADLAD. Especially for models where Helsinki has a low BLEU score (less than 40), MADLAD (or the faster M2M) is preferred. Using MADLAD drastically slows down training time, especially if you quantize (4 bit is even slower than 8 bit).
