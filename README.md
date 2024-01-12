@@ -222,6 +222,39 @@ options:
 
 ```
 
+# Choosing the right translation model
+> How do I know which translation model to choose for my target language?
+
+**We got you covered** with out `benchmark.py` script that helps make somewhat of a good guess (the dataset we use is the same as the OPUS models are trained on so the outcomes are always favorable towards OPUS). For usage, see the help of this script below. Models are loaded in 4-bit quantization and run on a small sample of the OPUS books subset.
+
+Be sure to use the most commonly occurring languages in your base dataset as source_language and your target translation language as target_language. For OASST1 for example, be sure to at least run `en` and `es` as source languages.
+
+```
+usage: benchmark.py [-h] [--cpu] [--start START] [--n N] [--max_length MAX_LENGTH] source_language target_language included_models
+
+Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit
+quantization to limit GPU usage. Note: the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you
+can compare models against each other relatively.
+
+positional arguments:
+  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as
+                        a good start.
+  target_language       The source language you want to test for. This should be the language you want to apply the translate script on.
+                        Note: in benchmark, we use 2-character language codes, in constrast to translate.py where you need to specify
+                        whatever your model expects.
+  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418M, m2m_1.2B, madlad_3b, madlad_7b,
+                        madlad_10b, madlad_7bbt, mbart, nllb_distilled600M, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b
+
+options:
+  -h, --help            show this help message and exit
+  --cpu                 Forces usage of CPU. By default GPU is taken if available.
+  --start START         The starting offset to include sentences from the OPUS books dataset from. Defaults to 0.
+  --n N                 The number of sentences to benchmark on. Defaults to 100.
+  --max_length MAX_LENGTH
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of
+                        running out of memory. Default is 512.
+```
+
 # Datasets and models
 
 We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repo and create datasets and models for other languages, then create a PR.
