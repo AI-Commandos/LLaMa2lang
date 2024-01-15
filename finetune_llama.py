@@ -1,6 +1,6 @@
 import os
 import torch
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -30,7 +30,10 @@ def main():
         print("Environment variable 'HF_TOKEN' is not set. Terminating.")
         sys.exit(1)
     
-    dataset = load_dataset(dataset_name)
+    if os.path.isdir(dataset_name):
+        dataset = load_from_disk(dataset_name)
+    else:
+        dataset = load_dataset(dataset_name)
 
     compute_dtype = getattr(torch, "float16")
 
