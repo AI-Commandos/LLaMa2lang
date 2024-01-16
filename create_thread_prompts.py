@@ -51,7 +51,7 @@ def main():
     base_dataset_parent_field = args.base_dataset_parent_field
 
     if os.path.isdir(dataset_name):
-        dataset = load_from_disk(os.path.join(dataset_name))
+        dataset = load_from_disk(dataset_name)
     else:
         dataset = load_dataset(dataset_name)
     
