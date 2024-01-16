@@ -53,6 +53,7 @@ class mBARTTranslator(BaseTranslator):
         'th': 'th_TH',
         'tl': 'tl_XX',
         'uk_UA': 'uk_UA',
+        'uk': 'uk_UA',
         'ur': 'ur_PK',
         'xh': 'xh_ZA',
         'gl': 'gl_ES',
