@@ -20,6 +20,7 @@ class NLLBTranslator(BaseTranslator):
         'eu': 'eus_Latn',
         'it': 'ita_Latn',
         'uk-UA': 'ukr_Cyrl',
+        'uk': 'ukr_Cyrl',
         'id': 'ind_Latn',
         'ar': 'arb_Arab',
         'fi': 'fin_Latn',
