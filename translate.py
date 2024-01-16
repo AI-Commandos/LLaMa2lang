@@ -61,7 +61,7 @@ def main():
                         help='How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is unlimited.')
     parser.add_argument('--cpu', action='store_true',
                         help="Forces usage of CPU. By default GPU is taken if available.")
-    parser.add_argument('--source_lang', action='store_true', type=str, default=None,
+    parser.add_argument('--source_lang', type=str, default=None,
                         help="Source language to select from OASST based on lang property of dataset")
 
     parser_opus = subparsers.add_parser('opus', help='Translate the dataset using HelsinkiNLP OPUS models.')
