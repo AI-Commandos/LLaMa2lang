@@ -1,4 +1,3 @@
-from datasets import Dataset
 import pandas as pd
 from tqdm import tqdm
 
@@ -10,7 +9,7 @@ def find_highest_ranked_child(df, parent_id):
       return None
 
 # Creates the prompts
-def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_author_field, instruction_prompt):
+def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt):
     # Construct threads
     threads = []
     df = dataset.to_pandas()
@@ -25,17 +24,22 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
     with tqdm(total=len(root_messages)) as pbar:
         for _, root_message in root_messages.iterrows():
             # Create the thread
-            if root_message[base_dataset_author_field] == 'prompter':
-                role = 'user'
-            else:
-                role = 'assistant'
-            thread = [{
-                'content': f" <<SYS>>\n{instruction_prompt.strip()}\n<</SYS>\n\n" + root_message[base_dataset_text_field],
-                'role': role
-            }]
+            thread = [
+                {
+                    'content': instruction_prompt,
+                    'role': 'system'
+                },
+                {
+                    'content': root_message[base_dataset_text_field],
+                    'role': 'user'
+                }
+            ]
             next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field])
         
             while next_message is not None:
+                role = next_message[base_dataset_role_field]
+                if role == 'prompter':
+                    role = 'user'
                 thread.append({
                     'content': next_message[base_dataset_text_field],
                     'role': role
@@ -43,7 +47,7 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
                 next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
         
             # Turn this into LLaMa2 format
-            threads.append(tokenizer.apply_chat_template(thread))
+            threads.append({'text': tokenizer.apply_chat_template(thread, tokenize=False)})
             # Update progress
             pbar.update(1)
     
