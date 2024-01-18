@@ -12,11 +12,8 @@ python translate.py m2m target_lang checkpoint_location
 # Combine the checkpoint files into a dataset
 python combine_checkpoints.py input_folder output_location
 
-# Create threaded prompts
-python create_thread_prompts.py dataset_name instruction_prompt output_location
-
 # Finetune
-python finetune.py tuned_model dataset_name
+python finetune.py tuned_model dataset_name instruction_prompt
 
 # Run inference
 python run_inference.py model_name instruction_prompt input
