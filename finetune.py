@@ -12,7 +12,7 @@ from trl import SFTTrainer
 import sys
 import argparse
 from threads import finetune_prompts
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 import pandas as pd
 
 def main():
@@ -45,6 +45,8 @@ def main():
                         help='Number of epochs to use. 2 is default and has been shown to work well.')
     parser.add_argument('--batch_size', type=int, default=4,
                         help='The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4')
+    parser.add_argument('--threads_output_name', type=str, default=None,
+                        help='If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.')    
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -61,6 +63,7 @@ def main():
     max_seq_length = args.max_seq_length
     num_train_epochs = args.num_train_epochs
     per_device_train_batch_size = args.batch_size
+    threads_output_name = args.threads_output_name
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -81,9 +84,19 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     
     # Compute the threads
-    threads = dataset['train']
-    prompts = finetune_prompts.create_prompts(threads, tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt)
-    prompts = Dataset.from_pandas(pd.DataFrame(data=prompts))
+    prompts = {k: [] for k in dataset.keys()}
+    for fold in prompts:
+        prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt)
+        prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=prompts))
+
+    # Check if we need to write out
+    if threads_output_name is not None:
+        # Also do the other folds
+        dataset_out = DatasetDict(prompts)
+        if os.path.isdir(threads_output_name):
+            dataset_out.save_to_disk(threads_output_name)
+        else:
+            dataset_out.push_to_hub(threads_output_name)
 
     if noquant:
         # Load base model
@@ -148,7 +161,7 @@ def main():
     )
     trainer = SFTTrainer(
         model=model,
-        train_dataset=prompts,
+        train_dataset=prompts['train'],
         peft_config=peft_params,
         dataset_text_field=base_dataset_text_field,
         max_seq_length=max_seq_length,

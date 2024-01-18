@@ -1,17 +1,6 @@
 # LLaMa2lang v0.3
 This repository contains convenience scripts to finetune LLaMa2-7b (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
-# Change info
-_v0.3_
-* **[2024-01-12]** You can now benchmark different translation models using `benchmark.py`.
-* **[2024-01-09]** We have significantly refactored the translation process. Please follow the readme carefully if you come from v0.2.
-* **[2024-01-09]** We now support translation through M2M.
-* **[2024-01-04]** We now support translation through MADLAD. Especially for models where Helsinki has a low BLEU score (less than 40), MADLAD (or the faster M2M) is preferred. Using MADLAD drastically slows down training time, especially if you quantize (4 bit is even slower than 8 bit).
-* **[2024-01-04]** We now use argparser to parse command line arguments. Make sure you update your calls to our scripts accordingly. Use `-h` on all scripts to get help.
-
-_v0.2_
-* **[2023-12-29]** We now batch translations in `translate.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
-
 # TL;DR
 
 ```
@@ -39,8 +28,9 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 1. Load a dataset that contains Q&A/instruction pairs.
 2. Translate the entire dataset to a given target language.
 3. Load the translated dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
-4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
+4. Turn the threads into prompts following a given template (customizable).
 5. Use QLoRA and PEFT to finetune a base foundation model's instruct finetune on this dataset.
+6. Run inference using the newly trained model.
 
 # Supported paradigms
 ## Translation
@@ -63,7 +53,6 @@ The following have been tested but potentially more will work
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
 * [L2L-10] Support extending the tokenizer and vocabulary
-* [L2L-11] Support more chat prompt formats
 
 ## Cost and runtime
 
@@ -151,59 +140,47 @@ options:
   -h, --help       show this help message and exit
 ```
 
-4. Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.
+5. Turn the translated messages into chat/instruct/prompt threads and finetune a foundate model's instruct using LoRA and PEFT.
 
 ```
-usage: create_thread_prompts.py [-h] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD]
-                                [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
-                                [--base_dataset_id_field BASE_DATASET_ID_FIELD]
-                                [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD]
-                                dataset_name instruction_prompt output_location
+usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
+                   [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--base_dataset_role_field BASE_DATASET_ROLE_FIELD]
+                   [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
+                   [--threads_output_name THREADS_OUTPUT_NAME]
+                   tuned_model dataset_name instruction_prompt
 
-Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the
-highest ranking answer following a given input prompt.
+Finetune a base instruct/chat model using (Q)LoRA and PEFT
 
 positional arguments:
-  dataset_name          The input dataset, loaded from Huggingface datasets or disk. This should
-                        be the result of the previous step.
-  instruction_prompt    An instruction message added to every prompt given to the chatbot to force
-                        it to answer in the target language. Example: "You are a generic chatbot
-                        that always answers in English."
-  output_location       Where to write the Huggingface Dataset to. Can be a disk location or a
-                        Huggingface Dataset repository. Be sure to set up HF_TOKEN.
-
-options:
-  -h, --help            show this help message and exit
-  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
-                        The dataset's column name containing the actual text to translate.
-                        Defaults to text
-  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
-                        The dataset's column name containing the rank of an answer given to a
-                        prompt. Defaults to rank
-  --base_dataset_id_field BASE_DATASET_ID_FIELD
-                        The dataset's column name containing the id of a text. Defaults to
-                        message_id
-  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
-                        The dataset's column name containing the parent id of a text. Defaults to
-                        parent_id
-```
-
-5. Fine-tune a foundate model's instruct using LoRA and PEFT.
-
-```
-usage: finetune.py [-h] [--base_model BASE_MODEL] tuned_model dataset_name
-
-Finetune a base model using QLoRA and PEFT
-
-positional arguments:
-  tuned_model           The name of the resulting tuned model. This will be pushed to Huggingface.
-                        Ensure HF_TOKEN is set.
-  dataset_name          The name of the dataset to use for fine-tuning.
+  tuned_model           The name of the resulting tuned model.
+  dataset_name          The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that
+                        always answers in English."
 
 options:
   -h, --help            show this help message and exit
   --base_model BASE_MODEL
                         The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The dataset's column name containing the actual text to translate. Defaults to text
+  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
+                        The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank
+  --base_dataset_id_field BASE_DATASET_ID_FIELD
+                        The dataset's column name containing the id of a text. Defaults to message_id
+  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
+                        The dataset's column name containing the parent id of a text. Defaults to parent_id
+  --base_dataset_role_field BASE_DATASET_ROLE_FIELD
+                        The dataset's column name containing the role of the author of the text (eg. prompter, assistant). Defaults to role
+  --quant8              Finetunes the model in 8 bits. Requires more memory than the default 4 bit.
+  --noquant             Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.
+  --max_seq_length MAX_SEQ_LENGTH
+                        The maximum sequence length to use in finetuning. Should most likely line up with your base model's default max_seq_length. Default is 512.
+  --num_train_epochs NUM_TRAIN_EPOCHS
+                        Number of epochs to use. 2 is default and has been shown to work well.
+  --batch_size BATCH_SIZE
+                        The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
+  --threads_output_name THREADS_OUTPUT_NAME
+                        If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
 ```
 
 6. Run inference using the newly created QLoRA model.
