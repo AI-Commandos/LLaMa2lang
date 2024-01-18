@@ -17,23 +17,49 @@ def main():
     parser.add_argument('tuned_model', type=str,
                         help='The name of the resulting tuned model. This will be pushed to Huggingface. Ensure HF_TOKEN is set.')
     parser.add_argument('dataset_name', type=str,
-                        help='The name of the dataset to use for fine-tuning.')
+                        help='The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.')
+    parser.add_argument('instruction_prompt', type=str, 
+                        help='An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."')
+    parser.add_argument('thread_format', type=str, choices=['llama2', 'chatml'],
+                        help="The format of the threads to use. 'llama2' is the format used by Llama2. 'chatml' is the format used by ChatML.")
     parser.add_argument('--base_model', type=str, default="NousResearch/Llama-2-7b-chat-hf",
                         help='The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".')
+    parser.add_argument('--base_dataset_text_field', type=str, default="text",
+                        help="The dataset's column name containing the actual text to translate. Defaults to text")
+    parser.add_argument('--base_dataset_rank_field', type=str, default="rank",
+                        help="The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank")
+    parser.add_argument('--base_dataset_id_field', type=str, default="message_id",
+                        help="The dataset's column name containing the id of a text. Defaults to message_id")
+    parser.add_argument('--base_dataset_parent_field', type=str, default="parent_id",
+                        help="The dataset's column name containing the parent id of a text. Defaults to parent_id")
+    
     args = parser.parse_args()
     base_model = args.base_model
     tuned_model = args.tuned_model
     dataset_name = args.dataset_name
+    instruction_prompt = args.instruction_prompt
+    output_location = args.output_location
+    base_dataset_text_field = args.base_dataset_text_field
+    base_dataset_rank_field = args.base_dataset_rank_field
+    base_dataset_id_field = args.base_dataset_id_field
+    base_dataset_parent_field = args.base_dataset_parent_field
+    thread_format = args.thread_format
 
     # Check for HF_TOKEN because otherwise we run a long time before dying :)
     if 'HF_TOKEN' not in os.environ:
         print("Environment variable 'HF_TOKEN' is not set. Terminating.")
         sys.exit(1)
     
+    # Load the base translated dataset
     if os.path.isdir(dataset_name):
         dataset = load_from_disk(dataset_name)
     else:
         dataset = load_dataset(dataset_name)
+    
+    # Compute the threads
+    if (thread_format == 'llama2'):
+        # TODO: Implement this
+        threads = dataset['train']
 
     compute_dtype = getattr(torch, "float16")
 
