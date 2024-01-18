@@ -27,7 +27,7 @@ python combine_checkpoints.py input_folder output_location
 python create_thread_prompts.py dataset_name instruction_prompt output_location
 
 # Finetune
-python finetune_llama.py tuned_model dataset_name
+python finetune.py tuned_model dataset_name
 
 # Run inference
 python run_inference.py model_name instruction_prompt input
@@ -191,7 +191,7 @@ options:
 5. Fine-tune a foundate model's instruct using LoRA and PEFT.
 
 ```
-usage: finetune_llama.py [-h] [--base_model BASE_MODEL] tuned_model dataset_name
+usage: finetune.py [-h] [--base_model BASE_MODEL] tuned_model dataset_name
 
 Finetune a base model using QLoRA and PEFT
 
