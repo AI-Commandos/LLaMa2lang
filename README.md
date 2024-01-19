@@ -48,6 +48,7 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * M2M
 * MADLAD
 * mBART
+* NLLB
 ## Base datasets
 The following have been tested but potentially more will work
 * OASST1
