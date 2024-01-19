@@ -1,35 +1,36 @@
 from translators.base import BaseTranslator
 from transformers import SeamlessM4Tv2ForTextToText, AutoProcessor
+import stanza
 import torch
 
 
 class Seamless_M4T_V2(BaseTranslator):
     language_mapping = {
-        'en': 'eng_Latn',
-        'es': 'spa_Latn',
-        'de': 'deu_Latn',
-        'ru': 'rus_Cyrl',
-        'ja': 'jpn_Jpan',
-        'pt-BR': 'por_Latn',
-        'ca': 'cat_Latn',
-        'fr': 'fra_Latn',
-        'pl': 'pol_Latn',
-        'vi': 'vie_Latn',
-        'zh': 'zho_Hant',
-        'hu': 'hun_Latn',
-        'ko': 'kor_Hang',
-        'eu': 'eus_Latn',
-        'it': 'ita_Latn',
-        'uk-UA': 'ukr_Cyrl',
-        'uk': 'ukr_Cyrl',
-        'id': 'ind_Latn',
-        'ar': 'arb_Arab',
-        'fi': 'fin_Latn',
-        'tr': 'tur_Latn',
-        'da': 'dan_Latn',
-        'th': 'tha_Thai',
-        'sv': 'swe_Latn',
-        'cs': 'ces_Latn'
+        'en': 'eng',
+        'es': 'spa',
+        'de': 'deu',
+        'ru': 'rus',
+        'ja': 'jpn',
+        'pt-BR': 'por',
+        'ca': 'cat',
+        'fr': 'fra',
+        'pl': 'pol',
+        'vi': 'vie',
+        'zh': 'zho',
+        'hu': 'hun',
+        'ko': 'kor',
+        'eu': 'eus',
+        'it': 'ita',
+        'uk-UA': 'ukr',
+        'uk': 'ukr',
+        'id': 'ind',
+        'ar': 'arb',
+        'fi': 'fin',
+        'tr': 'tur',
+        'da': 'dan',
+        'th': 'tha',
+        'sv': 'swe',
+        'cs': 'ces'
     }
 
     def __init__(self, device, quant4, quant4_config, quant8, max_length, model_size):
@@ -51,13 +52,27 @@ class Seamless_M4T_V2(BaseTranslator):
 
     def translate(self, texts, source_lang, target_lang):
         self.processor.src_lang = self.language_mapping[source_lang]
+        nlp = stanza.Pipeline(lang=source_lang)
         with torch.no_grad():
-            if self.max_length is None:
-                encoded_batch = self.processor(texts, return_tensors="pt", padding=True).to(self.device)
-            else:
-                encoded_batch = self.processor(texts, return_tensors="pt", padding=True, truncation=True,
-                                               max_length=self.max_length).to(self.device)
-            decoder_input_ids = self.model.generate(**encoded_batch,
-                                                    tgt_lang=self.language_mapping[target_lang])[0].tolist()
-            translated_texts = self.processor.decode(decoder_input_ids, skip_special_tokens=True)
+            print(texts)
+            print("__________")
+            sentence_segmented_texts = nlp.bulk_process(texts)
+            translated_texts = []
+            for document in sentence_segmented_texts:
+                translated_text = ""
+                for sentence in document.sentences:
+                    decoder_input_ids = self.translate_text(target_lang, sentence)
+                    translated_text += self.processor.decode(decoder_input_ids, skip_special_tokens=True)
+                translated_texts.append(translated_text)
+            print(translated_texts)
             return translated_texts
+
+    def translate_text(self, target_lang, text):
+        if self.max_length is None:
+            encoded_batch = self.processor(text, return_tensors="pt", padding=True).to(self.device)
+        else:
+            encoded_batch = self.processor(text, return_tensors="pt", padding=True, truncation=True,
+                                           max_length=self.max_length).to(self.device)
+        decoder_input_ids = self.model.generate(**encoded_batch,
+                                                tgt_lang=self.language_mapping[target_lang])[0].tolist()
+        return decoder_input_ids

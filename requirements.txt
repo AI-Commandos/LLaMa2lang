@@ -10,5 +10,6 @@ huggingface_hub==0.19.4
 scipy==1.11.4
 tensorboardx==2.6.2.2
 pandas==1.5.3
+stanza==1.7.0
 tqdm
 sacrebleu
