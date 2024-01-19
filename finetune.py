@@ -46,7 +46,9 @@ def main():
     parser.add_argument('--batch_size', type=int, default=4,
                         help='The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4')
     parser.add_argument('--threads_output_name', type=str, default=None,
-                        help='If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.')    
+                        help='If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.')
+    parser.add_argument('--thread_template', type=str, default="threads/template_default.txt",
+                        help='A file containing the thread template to use. Default is threads/template_fefault.txt')
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -64,6 +66,7 @@ def main():
     num_train_epochs = args.num_train_epochs
     per_device_train_batch_size = args.batch_size
     threads_output_name = args.threads_output_name
+    thread_template_file = args.thread_template
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -82,16 +85,21 @@ def main():
     
     # Load base tokenizer
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
+    # Get the template
+    with open(thread_template_file, 'r', encoding="utf8") as f:
+        chat_template = f.read()
     
     # Compute the threads
     prompts = {k: [] for k in dataset.keys()}
     for fold in prompts:
-        prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt)
-        prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=prompts))
+        print(f"[---- LLaMa2Lang ----] Generating prompts using chat template {chat_template} for fold {fold}")
+        templated_prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt, chat_template)
+        prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=templated_prompts))
 
     # Check if we need to write out
     if threads_output_name is not None:
         # Also do the other folds
+        print(f"[---- LLaMa2Lang ----] Writing out thread prompts dataset to {threads_output_name}")
         dataset_out = DatasetDict(prompts)
         if os.path.isdir(threads_output_name):
             dataset_out.save_to_disk(threads_output_name)
@@ -172,10 +180,12 @@ def main():
 
     # Before starting training, free up memory
     torch.cuda.empty_cache()
+    print(f"[---- LLaMa2Lang ----] Starting training")
     # Train the model
     trainer.train()
 
     # Check if output location is a valid directory
+    print(f"[---- LLaMa2Lang ----] Writing model and tokenizer out to {tuned_model}")
     if os.path.isdir(tuned_model):
         trainer.model.save_to_disk(tuned_model)
         trainer.tokenizer.save_to_disk(tuned_model)
