@@ -1,5 +1,6 @@
 from translators.base import BaseTranslator
 from transformers import SeamlessM4Tv2ForTextToText, AutoProcessor
+from stanza.pipeline.core import DownloadMethod
 import stanza
 import torch
 
@@ -52,19 +53,26 @@ class Seamless_M4T_V2(BaseTranslator):
 
     def translate(self, texts, source_lang, target_lang):
         self.processor.src_lang = self.language_mapping[source_lang]
-        nlp = stanza.Pipeline(lang=source_lang)
         with torch.no_grad():
-            print(texts)
-            print("__________")
+            # Seamless is good for short messages/sentences,
+            # so there is need to conduct sentence segmentation to have a
+            # good quality translation of texts
+            nlp_processors = {'tokenize': 'spacy'} if source_lang == 'en' else 'tokenize'
+            nlp = stanza.Pipeline(
+                lang=source_lang,
+                download_method=DownloadMethod.REUSE_RESOURCES,
+                processors=nlp_processors,
+                use_gpu=True,
+                verbose=False
+            )
             sentence_segmented_texts = nlp.bulk_process(texts)
             translated_texts = []
             for document in sentence_segmented_texts:
                 translated_text = ""
                 for sentence in document.sentences:
-                    decoder_input_ids = self.translate_text(target_lang, sentence)
-                    translated_text += self.processor.decode(decoder_input_ids, skip_special_tokens=True)
-                translated_texts.append(translated_text)
-            print(translated_texts)
+                    decoder_input_ids = self.translate_text(target_lang, sentence.text)
+                    translated_text += self.processor.decode(decoder_input_ids, skip_special_tokens=True) + " "
+                translated_texts.append(translated_text.strip())
             return translated_texts
 
     def translate_text(self, target_lang, text):
