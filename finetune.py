@@ -92,7 +92,7 @@ def main():
     # Compute the threads
     prompts = {k: [] for k in dataset.keys()}
     for fold in prompts:
-        print(f"[---- LLaMa2Lang ----] Generating prompts using chat template {chat_template} for fold {fold}")
+        print(f"[---- LLaMa2Lang ----] Generating prompts using chat template {thread_template_file} for fold {fold}")
         templated_prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt, chat_template)
         prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=templated_prompts))
 

@@ -28,7 +28,7 @@ def main():
     tokenizer.padding_side = "left"
 
     # Prepare input in LLaMa2 chat format
-    input_text = f"<s>[INST] <<SYS>> {instruction_prompt} <</SYS>> {input} [/INST]"
+    input_text = f"[INST] <<SYS>> {instruction_prompt} <</SYS>> {input} [/INST]"
     inputs = tokenizer(input_text, return_tensors="pt").to(model.device)
 
     # Generate response and decode
