@@ -9,9 +9,10 @@ from translators.madlad import MADLADTranslator
 from translators.mbart import mBARTTranslator
 from translators.nllb import NLLBTranslator
 from translators.opus import OPUSTranslator
+from translators.seamless_m4t_v2 import Seamless_M4T_V2
 
 def main():
-    allowed_models = ['opus', 'm2m_418m', 'm2m_1.2b', 'madlad_3b', 'madlad_7b', 'madlad_10b', 'madlad_7bbt', 'mbart', 'nllb_distilled600m', 'nllb_1.3b', 'nllb_distilled1.3b', 'nllb_3.3b']
+    allowed_models = ['opus', 'm2m_418m', 'm2m_1.2b', 'madlad_3b', 'madlad_7b', 'madlad_10b', 'madlad_7bbt', 'mbart', 'nllb_distilled600m', 'nllb_1.3b', 'nllb_distilled1.3b', 'nllb_3.3b', 'seamless']
     parser = argparse.ArgumentParser(description="Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit quantization to limit GPU usage. Note: the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you can compare models against each other relatively.")
     parser.add_argument('source_language', type=str,
                         help='The source language you want to test for. Check your dataset to see which occur most prevalent or use English as a good start.')
@@ -85,6 +86,9 @@ def main():
             translator = NLLBTranslator(device, True, quant4_config, False, max_length, model_size)
             # TODO: Extend this later, there are far more languages
             model_target_language = translator.language_mapping[target_language]
+        elif model.startswith('seamless'):
+            model_size = 'large' # Currently only one on HF
+            translator = Seamless_M4T_V2(device, True, quant4_config, False, max_length, model_size)
         else:
             translator = OPUSTranslator(device, False, quant4_config, False, max_length)
         
