@@ -36,6 +36,7 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * MADLAD
 * mBART
 * NLLB
+* Seamless
 ## Base datasets
 The following have been tested but potentially more will work
 * OASST1
@@ -67,19 +68,22 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 2. Translate your base dataset to your designated target language.
 
 ```
-usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD] [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
-                    {opus,mbart,madlad,m2m,nllb} ... target_lang checkpoint_location
+usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD]
+                    [--base_dataset_lang_field BASE_DATASET_LANG_FIELD] [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
+                    [--source_lang SOURCE_LANG]
+                    {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2} ... target_lang checkpoint_location
 
 Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
 positional arguments:
-  {opus,mbart,madlad,m2m,nllb}
+  {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2}
                         The model/architecture used for translation.
     opus                Translate the dataset using HelsinkiNLP OPUS models.
     mbart               Translate the dataset using mBART.
     madlad              Translate the dataset using Google's MADLAD models.
     m2m                 Translate the dataset using Facebook's M2M models.
     nllb                Translate the dataset using Facebook's NLLB models.
+    seamless_m4t_v2     Translate the dataset using Facebook's SeamlessM4T-v2 multimodal models.
   target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
   checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
 
@@ -98,8 +102,11 @@ options:
   --batch_size BATCH_SIZE
                         The batch size for a single translation model. Adjust based on your GPU capacity. Default is 10.
   --max_length MAX_LENGTH
-                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is unlimited.
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is
+                        unlimited.
   --cpu                 Forces usage of CPU. By default GPU is taken if available.
+  --source_lang SOURCE_LANG
+                        Source language to select from OASST based on lang property of dataset
 ```
 
 If you want more parameters for the different translation models, run:
@@ -143,7 +150,7 @@ options:
 usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
                    [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--base_dataset_role_field BASE_DATASET_ROLE_FIELD]
                    [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
-                   [--threads_output_name THREADS_OUTPUT_NAME]
+                   [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
                    tuned_model dataset_name instruction_prompt
 
 Finetune a base instruct/chat model using (Q)LoRA and PEFT
@@ -178,6 +185,8 @@ options:
                         The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
   --threads_output_name THREADS_OUTPUT_NAME
                         If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
+  --thread_template THREAD_TEMPLATE
+                        A file containing the thread template to use. Default is threads/template_fefault.txt
 ```
 
 6. Run inference using the newly created QLoRA model.
@@ -210,18 +219,15 @@ Be sure to use the most commonly occurring languages in your base dataset as sou
 ```
 usage: benchmark.py [-h] [--cpu] [--start START] [--n N] [--max_length MAX_LENGTH] source_language target_language included_models
 
-Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit
-quantization to limit GPU usage. Note: the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you
-can compare models against each other relatively.
+Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit quantization to limit GPU usage. Note:
+the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you can compare models against each other relatively.
 
 positional arguments:
-  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as
-                        a good start.
-  target_language       The source language you want to test for. This should be the language you want to apply the translate script on.
-                        Note: in benchmark, we use 2-character language codes, in constrast to translate.py where you need to specify
-                        whatever your model expects.
-  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418M, m2m_1.2B, madlad_3b, madlad_7b,
-                        madlad_10b, madlad_7bbt, mbart, nllb_distilled600M, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b
+  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as a good start.
+  target_language       The source language you want to test for. This should be the language you want to apply the translate script on. Note: in benchmark, we use 2-character
+                        language codes, in constrast to translate.py where you need to specify whatever your model expects.
+  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418m, m2m_1.2b, madlad_3b, madlad_7b, madlad_10b, madlad_7bbt, mbart,
+                        nllb_distilled600m, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b, seamless
 
 options:
   -h, --help            show this help message and exit
@@ -229,8 +235,7 @@ options:
   --start START         The starting offset to include sentences from the OPUS books dataset from. Defaults to 0.
   --n N                 The number of sentences to benchmark on. Defaults to 100.
   --max_length MAX_LENGTH
-                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of
-                        running out of memory. Default is 512.
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is 512.
 ```
 
 # Datasets and models
