@@ -36,6 +36,7 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * MADLAD
 * mBART
 * NLLB
+* Seamless
 * Tower Instruct
 ## Base datasets
 The following have been tested but potentially more will work
@@ -149,7 +150,7 @@ options:
 usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
                    [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--base_dataset_role_field BASE_DATASET_ROLE_FIELD]
                    [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
-                   [--threads_output_name THREADS_OUTPUT_NAME]
+                   [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
                    tuned_model dataset_name instruction_prompt
 
 Finetune a base instruct/chat model using (Q)LoRA and PEFT
@@ -184,6 +185,8 @@ options:
                         The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
   --threads_output_name THREADS_OUTPUT_NAME
                         If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
+  --thread_template THREAD_TEMPLATE
+                        A file containing the thread template to use. Default is threads/template_fefault.txt
 ```
 
 6. Run inference using the newly created QLoRA model.
@@ -216,18 +219,15 @@ Be sure to use the most commonly occurring languages in your base dataset as sou
 ```
 usage: benchmark.py [-h] [--cpu] [--start START] [--n N] [--max_length MAX_LENGTH] source_language target_language included_models
 
-Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit
-quantization to limit GPU usage. Note: the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you
-can compare models against each other relatively.
+Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit quantization to limit GPU usage. Note:
+the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you can compare models against each other relatively.
 
 positional arguments:
-  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as
-                        a good start.
-  target_language       The source language you want to test for. This should be the language you want to apply the translate script on.
-                        Note: in benchmark, we use 2-character language codes, in constrast to translate.py where you need to specify
-                        whatever your model expects.
-  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418M, m2m_1.2B, madlad_3b, madlad_7b,
-                        madlad_10b, madlad_7bbt, mbart, nllb_distilled600M, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b
+  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as a good start.
+  target_language       The source language you want to test for. This should be the language you want to apply the translate script on. Note: in benchmark, we use 2-character
+                        language codes, in constrast to translate.py where you need to specify whatever your model expects.
+  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418m, m2m_1.2b, madlad_3b, madlad_7b, madlad_10b, madlad_7bbt, mbart,
+                        nllb_distilled600m, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b, seamless
 
 options:
   -h, --help            show this help message and exit
@@ -235,8 +235,7 @@ options:
   --start START         The starting offset to include sentences from the OPUS books dataset from. Defaults to 0.
   --n N                 The number of sentences to benchmark on. Defaults to 100.
   --max_length MAX_LENGTH
-                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of
-                        running out of memory. Default is 512.
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is 512.
 ```
 
 # Datasets and models
@@ -294,6 +293,9 @@ We have created and will continue to create numerous datasets and models already
 - [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) QLoRA adapter for LLaMa2-7b-chat in Polish.
 - [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
 - [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) QLoRA adapter for LLaMa2-7b-chat in Bengali.
+
+## Language-specific Mistral chat model adapters
+- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
 
 ## Language-specific LLaMa2-13B chat model adapters
 
