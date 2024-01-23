@@ -13,6 +13,7 @@ from translators.mbart import mBARTTranslator
 from translators.nllb import NLLBTranslator
 from translators.opus import OPUSTranslator
 from translators.seamless_m4t_v2 import Seamless_M4T_V2
+from translators.towerinstruct import TowerInstructTranslator
 
 
 # Find the max checkpoint number to continue from
@@ -91,6 +92,8 @@ def main():
                              choices=['medium', 'large'],
                              help='The size of the SeamlessM4T model to use. Default is medium')
 
+    parser_towerinstruct = subparsers.add_parser('towerinstruct', help='Translate the dataset using Unbabel\'s Tower Instruct. Make sure your target language is in the 10 languages supported by the model.')
+
     # Default arguments shared across models
     args = parser.parse_args()
     model = args.model
@@ -135,6 +138,8 @@ def main():
         translator = NLLBTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     elif model == 'seamless_m4t_v2':
         translator = Seamless_M4T_V2(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
+    elif model == 'towerinstruct':
+        translator = TowerInstructTranslator(device, quant4, quant4_config, quant8, args.max_length)
     else:
         translator = OPUSTranslator(device, quant4, quant4_config, quant8, args.max_length)
 

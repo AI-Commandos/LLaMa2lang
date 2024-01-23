@@ -36,6 +36,7 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * MADLAD
 * mBART
 * NLLB
+* Tower Instruct
 ## Base datasets
 The following have been tested but potentially more will work
 * OASST1
@@ -67,19 +68,22 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 2. Translate your base dataset to your designated target language.
 
 ```
-usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD] [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu]
-                    {opus,mbart,madlad,m2m,nllb} ... target_lang checkpoint_location
+usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
+                    [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu] [--source_lang SOURCE_LANG]
+                    {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2,towerinstruct} ... target_lang checkpoint_location
 
 Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
 positional arguments:
-  {opus,mbart,madlad,m2m,nllb}
+  {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2,towerinstruct}
                         The model/architecture used for translation.
     opus                Translate the dataset using HelsinkiNLP OPUS models.
     mbart               Translate the dataset using mBART.
     madlad              Translate the dataset using Google's MADLAD models.
     m2m                 Translate the dataset using Facebook's M2M models.
     nllb                Translate the dataset using Facebook's NLLB models.
+    seamless_m4t_v2     Translate the dataset using Facebook's SeamlessM4T-v2 multimodal models.
+    towerinstruct       Translate the dataset using Unbabel's Tower Instruct. Make sure your target language is in the 10 languages supported by the model.
   target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
   checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
 
@@ -100,6 +104,8 @@ options:
   --max_length MAX_LENGTH
                         How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is unlimited.
   --cpu                 Forces usage of CPU. By default GPU is taken if available.
+  --source_lang SOURCE_LANG
+                        Source language to select from OASST based on lang property of dataset
 ```
 
 If you want more parameters for the different translation models, run:
