@@ -294,6 +294,9 @@ We have created and will continue to create numerous datasets and models already
 - [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
 - [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) QLoRA adapter for LLaMa2-7b-chat in Bengali.
 
+## Language-specific Mistral chat model adapters
+- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
+
 ## Language-specific LLaMa2-13B chat model adapters
 
 - [UnderstandLing/llama-2-13b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-13b-chat-nl) QLoRA adapter for LLaMa2-13B in Dutch.
