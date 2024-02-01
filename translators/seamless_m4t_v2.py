@@ -37,7 +37,7 @@ class Seamless_M4T_V2(BaseTranslator):
     def __init__(self, device, quant4, quant4_config, quant8, max_length, model_size):
         super().__init__(device, quant4, quant4_config, quant8, max_length)
 
-        model_name = f'facebook/seamless-m4t-v2-{model_size}'
+        model_name = f'facebook/seamless-m4t-v2-large'
         # Load model and tokenizer
         if self.quant4:
             model = SeamlessM4Tv2ForTextToText.from_pretrained(model_name, device_map=device,
