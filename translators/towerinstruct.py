@@ -14,7 +14,8 @@ class TowerInstructTranslator(BaseTranslator):
         'it': 'Italian',
         'ko': 'Korean',
         'zh': 'Chinese',
-        'ru': 'Russian'
+        'ru': 'Russian',
+        'uk': 'Ukrainian'
     }
     def __init__(self, device, quant4, quant4_config, quant8, max_length):
         super().__init__(device, quant4, quant4_config, quant8, max_length)
