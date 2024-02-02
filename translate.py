@@ -156,7 +156,7 @@ def main():
             if selected_source_language is not None:
                 records = records_by_lang[selected_source_language]
                 translate_records(base_dataset_lang_field, base_dataset_text_field, batch_size, checkpoint_location,
-                                  checkpoint_n, device, fold, pbar, records, source_lang, target_lang, translator,
+                                  checkpoint_n, device, fold, pbar, records, selected_source_language, target_lang, translator,
                                   last_checkpoint=start_index, end_of_range=end_index)
             else:
                 for source_lang, records in records_by_lang.items():
@@ -179,6 +179,7 @@ def translate_records(base_dataset_lang_field, base_dataset_text_field, batch_si
     records_length = len(records) if end_of_range is None else end_of_range
     print(
         f'[---- LLaMa2Lang ----] Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}, will process till {records_length}')
+    pbar.total = records_length
     pbar.update(last_checkpoint_n)
     for cnt in range(last_checkpoint_n, records_length, batch_size):
         # Translate a full batch

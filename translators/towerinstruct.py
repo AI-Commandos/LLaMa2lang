@@ -30,7 +30,7 @@ class TowerInstructTranslator(BaseTranslator):
             model = AutoModelForCausalLM.from_pretrained(model_name).to(self.device)
         tokenizer = AutoTokenizer.from_pretrained(model_name)
 
-        self.nlp_pipeline = pipeline("text-generation", model=model, tokenizer=tokenizer, device=self.device)
+        self.nlp_pipeline = pipeline("text-generation", model=model, device_map=self.device, tokenizer=tokenizer)
         self.printed_error_langs = {}
 
     def translate(self, texts, source_lang, target_lang):
@@ -40,7 +40,7 @@ class TowerInstructTranslator(BaseTranslator):
 
             with torch.no_grad():
                 texts = [{'role':'user','content': f'Translate the following text from {src_lang} into {trgt_lang}.\n{src_lang}: {t}\n{trgt_lang}:'} for t in texts]
-                prompts = [self.nlp_pipeline.tokenizer.apply_chat_template([text], tokenize=False, add_generation_prompt=True).to(self.device) for text in texts]
+                prompts = [self.nlp_pipeline.tokenizer.apply_chat_template([text], tokenize=False, add_generation_prompt=True) for text in texts]
                 if self.max_length is None:
                     outputs = [self.nlp_pipeline(prompt, do_sample=False) for prompt in prompts]
                 else:
