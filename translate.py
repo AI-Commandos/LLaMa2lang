@@ -14,6 +14,7 @@ from translators.nllb import NLLBTranslator
 from translators.opus import OPUSTranslator
 from translators.seamless_m4t_v2 import Seamless_M4T_V2
 from translators.towerinstruct import TowerInstructTranslator
+from translators.gemini_pro import GeminiProTranslator
 
 
 # Find the max checkpoint number to continue from
@@ -98,6 +99,10 @@ def main():
 
     parser_towerinstruct = subparsers.add_parser('towerinstruct', help='Translate the dataset using Unbabel\'s Tower Instruct. Make sure your target language is in the 10 languages supported by the model.')
 
+    parser_gemini_pro = subparsers.add_parser('gemini_pro', help='Gemini Pro translation model')
+
+    parser_gemini_pro.add_argument('--auth_token', type=str, default=None,
+                                   help='Gemini Pro retrieved here https://makersuite.google.com/app/apikey')
     # Default arguments shared across models
     args = parser.parse_args()
     model = args.model
@@ -146,6 +151,8 @@ def main():
         translator = Seamless_M4T_V2(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     elif model == 'towerinstruct':
         translator = TowerInstructTranslator(device, quant4, quant4_config, quant8, args.max_length)
+    elif model == 'gemini_pro':
+        translator = GeminiProTranslator(args.auth_token, args.max_length)
     else:
         translator = OPUSTranslator(device, quant4, quant4_config, quant8, args.max_length)
 
