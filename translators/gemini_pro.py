@@ -27,11 +27,6 @@ class GeminiProTranslator(BaseTranslator):
 
     async def translate_text(self, text, prompt):
         response = self.model.generate_content(f"{prompt}\n{text}")
-        if response.prompt_feedback:
-            print(text)
-            print(response.prompt_feedback)
-        else:
-            print(response.text)
         return response.text
 
     async def translate_texts(self, texts, prompt):
