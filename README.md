@@ -1,8 +1,5 @@
-# LLaMa2lang v0.2
-This repository contains convenience scripts to finetune LLaMa2-7b for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
-
-# Change info
-* **[2023-12-29]** We now batch translations in `translate_oasst.py` for a 30-60% speed increase. If you have checkpoints from before this date, you can **not** continue using the main branch but instead must use the [v0.1 branch](https://github.com/UnderstandLingBV/LLaMa2lang/tree/v0.1).
+# LLaMa2lang v0.4
+This repository contains convenience scripts to finetune LLaMa2-7b (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # TL;DR
 
@@ -10,34 +7,51 @@ This repository contains convenience scripts to finetune LLaMa2-7b for chat towa
 pip install -r requirements.txt
 
 # Translate OASST1 to target language
-python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]
+python translate.py m2m target_lang checkpoint_location
 
 # Combine the checkpoint files into a dataset
-python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]
-
-# Create threaded prompts
-python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]
+python combine_checkpoints.py input_folder output_location
 
 # Finetune
-python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME] [BATCH_SIZE]
+python finetune.py tuned_model dataset_name instruction_prompt
 
 # Run inference
-python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]
+python run_inference.py model_name instruction_prompt input
 ```
 
-
 # What it does
-The process we follow to tune LLaMa2 for a specific language is as follows:
+The process we follow to tune a foundation model such as LLaMa2 for a specific language is as follows:
 
-1. We use the [Open Assistant dataset](https://huggingface.co/datasets/OpenAssistant/oasst1) from Huggingface as our base instruct data.
-2. The dataset is fully translated into a specific target language using [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP). This follows a two-step process:
+1. Load a dataset that contains Q&A/instruction pairs.
+2. Translate the entire dataset to a given target language.
+3. Load the translated dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
+4. Turn the threads into prompts following a given template (customizable).
+5. Use QLoRA and PEFT to finetune a base foundation model's instruct finetune on this dataset.
+6. Run inference using the newly trained model.
 
-    2.1 Try to translate from the source language specified in OASST1 to the desired target language using a model for that language pair.
+# Supported paradigms
+## Translation
+* OPUS
+* M2M
+* MADLAD
+* mBART
+* NLLB
+* Seamless
+* Tower Instruct
+## Base datasets
+The following have been tested but potentially more will work
+* OASST1
+* OASST2
+## Supported foundation models
+* LLaMa2
+* Mistral
+* (Unofficial) Mixtral 8x7B
 
-    2.2 If there is no such model, try to translate from the source language to English first and then from English to the target language.
-3. Load the translated OASST1 dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
-4. Turn the threads into texts using [LLaMa's prompt format](https://huggingface.co/blog/llama2#how-to-prompt-llama-2).
-5. Use QLoRA and PEFT to finetune LLaMa2-chat on this dataset.
+# Roadmap
+* [L2L-4] Add DPO training as RLHF alternative
+* [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
+* [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
+* [L2L-10] Support extending the tokenizer and vocabulary
 
 ## Cost and runtime
 
@@ -52,70 +66,183 @@ Our fine-tuned models for step 5 were performed using an A40 on [vast.ai](https:
 
 `pip install -r requirements.txt`
 
-2. Translate the OASST1 dataset into your target language. This script writes out intermediate results to a `checkpoint_location` because its runtime is quite lengthy (about 30-40 hours on a T4 Google Colab GPU).
+2. Translate your base dataset to your designated target language.
 
-`python translate_oasst.py [TARGET_LANG] [CHECKPOINT_FOLDER] [CHECKPOINT_N] [BATCH_SIZE]`
+```
+usage: translate.py [-h] [--quant8] [--quant4] [--base_dataset BASE_DATASET] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_lang_field BASE_DATASET_LANG_FIELD]
+                    [--checkpoint_n CHECKPOINT_N] [--batch_size BATCH_SIZE] [--max_length MAX_LENGTH] [--cpu] [--source_lang SOURCE_LANG]
+                    {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2,towerinstruct} ... target_lang checkpoint_location
 
-Parameters:
+Translate an instruct/RLHF dataset to a given target language using a variety of translation models
 
-- `TARGET_LANG` The target language, use ISO language codes as used in the [Helsinki-NLP's OPUS translation models](https://huggingface.co/Helsinki-NLP).
-- `CHECKPOINT_FOLDER` The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
-- `CHECKPOINT_N` An integer representing how often a checkpoint file will be written out. OASST1 contains 84.4k records in train and another 4.4k records in validation. We found `200` to be a reasonable number for this parameter.
-- `BATCH_SIZE` The batch size to put through a single translation model for a single source language in one go. Make this small enough to fit on your GPU yet large enough to gain significant time. A good guess for value would be 20 or 40 on an 8/16GB GPU.
+positional arguments:
+  {opus,mbart,madlad,m2m,nllb,seamless_m4t_v2,towerinstruct}
+                        The model/architecture used for translation.
+    opus                Translate the dataset using HelsinkiNLP OPUS models.
+    mbart               Translate the dataset using mBART.
+    madlad              Translate the dataset using Google's MADLAD models.
+    m2m                 Translate the dataset using Facebook's M2M models.
+    nllb                Translate the dataset using Facebook's NLLB models.
+    seamless_m4t_v2     Translate the dataset using Facebook's SeamlessM4T-v2 multimodal models.
+    towerinstruct       Translate the dataset using Unbabel's Tower Instruct. Make sure your target language is in the 10 languages supported by the model.
+  target_lang           The target language. Make sure you use language codes defined by the translation model you are using.
+  checkpoint_location   The folder the script will write (JSONized) checkpoint files to. Folder will be created if it doesn't exist.
+
+options:
+  -h, --help            show this help message and exit
+  --quant8              Optional flag to load the translation model in 8 bits. Decreases memory usage, increases running time
+  --quant4              Optional flag to load the translation model in 4 bits. Decreases memory usage, increases running time
+  --base_dataset BASE_DATASET
+                        The base dataset to translate, defaults to OpenAssistant/oasst1
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The base dataset's column name containing the actual text to translate. Defaults to text
+  --base_dataset_lang_field BASE_DATASET_LANG_FIELD
+                        The base dataset's column name containing the language the source text was written in. Defaults to lang
+  --checkpoint_n CHECKPOINT_N
+                        An integer representing how often a checkpoint file will be written out. To start off, 400 is a reasonable number.
+  --batch_size BATCH_SIZE
+                        The batch size for a single translation model. Adjust based on your GPU capacity. Default is 10.
+  --max_length MAX_LENGTH
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is unlimited.
+  --cpu                 Forces usage of CPU. By default GPU is taken if available.
+  --source_lang SOURCE_LANG
+                        Source language to select from OASST based on lang property of dataset
+```
+
+If you want more parameters for the different translation models, run:
+```
+python translate.py [MODEL] -h
+```
+
+Be sure to specify model-specific parameters first before you specify common parameters from the list above. Example calls:
+```
+# Using M2M with 4bit quantization and differen batch sizes to translate Dutch
+python translate.py m2m nl ./output_nl --quant4 --batch_size 20
+
+# Using madlad 7B with 8bit quantization for German with different max_length
+python translate.py madlad --model_size 7b de ./output_de --quant8 --batch_size 5 --max_length 512
+
+# Be sure to use target language codes that the model you use understands
+python translate.py mbart xh_ZA ./output_xhosa
+python translate.py nllb nld_Latn ./output_nl
+```
 
 3. Combine the JSON arrays from the checkpoints' files into a Huggingface Dataset and then either write it to disk or publish it to Huggingface. The script will try to write to disk by default and fall back to publishing to Huggingface if the folder doesn't exist on disk. For publishing to Huggingface, make sure you have your `HF_TOKEN` environment variable set up as per [the documentation](https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken).
 
-`python combine_checkpoints.py [CHECKPOINT_FOLDER] [OUTPUT_LOCATION]`
+```
+usage: combine_checkpoints.py [-h] input_folder output_location
 
-Parameters:
+Combine checkpoint files from translation.
 
-- `[CHECKPOINT_FOLDER]` The same checkpoint location as used in translation but now with the `[TARGET_LANG]` added to it. Example: checkpoint location used to write: `./checkpoints` for target language `nl` results in this script requiring `./checkpoints/nl`.
-- [OUTPUT_LOCATION] Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+positional arguments:
+  input_folder     The checkpoint folder used in translation, with the target language appended.
+                   Example: "./output_nl".
+  output_location  Where to write the Huggingface Dataset. Can be a disk location or a Huggingface
+                   Dataset repository.
 
-4. Turn the translated dataset into threads in LLaMa2-chat format. We do this by always using the highest ranking answer following a given input prompt.
+options:
+  -h, --help       show this help message and exit
+```
 
-`python create_thread_prompts.py [INPUT_DATASET] [INSTRUCTION_PROMPT] [OUTPUT_DATASET]`
+5. Turn the translated messages into chat/instruct/prompt threads and finetune a foundate model's instruct using LoRA and PEFT.
 
-Parameters:
+```
+usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
+                   [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--base_dataset_role_field BASE_DATASET_ROLE_FIELD]
+                   [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
+                   [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
+                   tuned_model dataset_name instruction_prompt
 
-* `[INPUT_DATASET]` The input dataset, loaded from Huggingface datasets. This should be the result of the previous setp.
-* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
-    * EN: You are a generic chatbot that always answers in English.
-    * ES: Eres un chatbot genérico que siempre responde en español.
-    * FR: Tu es un chatbot générique qui répond toujours en français.
-    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
-* `[OUTPUT_DATASET]` Where to write the Huggingface Dataset to. Can either be a location on disk or a Hugginface Dataset repository if the location on disk does not exist. Be sure to set up `HF_TOKEN`.
+Finetune a base instruct/chat model using (Q)LoRA and PEFT
 
-5. Fine-tune LLaMa2-7B-chat (or another base model) using LoRA and PEFT.
+positional arguments:
+  tuned_model           The name of the resulting tuned model.
+  dataset_name          The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that
+                        always answers in English."
 
-`python finetune_llama.py [BASE_MODEL] [TUNED_MODEL] [DATASET_NAME]`
-
-Parameters:
-
-* `[BASE_MODEL]` The base foundation model. If you don't know which to use, we recommend [https://huggingface.co/NousResearch/Llama-2-7b-chat-hf](https://huggingface.co/NousResearch/Llama-2-7b-chat-hf).
-* `[TUNED_MODEL]` The name of the resulting tuned model. This will be pushed to Huggingface directly. Make sure you have `HF_TOKEN` set as an environment variable.
-* `[DATASET_NAME]` The name of the dataset to use for finetuning.
+options:
+  -h, --help            show this help message and exit
+  --base_model BASE_MODEL
+                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The dataset's column name containing the actual text to translate. Defaults to text
+  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
+                        The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank
+  --base_dataset_id_field BASE_DATASET_ID_FIELD
+                        The dataset's column name containing the id of a text. Defaults to message_id
+  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
+                        The dataset's column name containing the parent id of a text. Defaults to parent_id
+  --base_dataset_role_field BASE_DATASET_ROLE_FIELD
+                        The dataset's column name containing the role of the author of the text (eg. prompter, assistant). Defaults to role
+  --quant8              Finetunes the model in 8 bits. Requires more memory than the default 4 bit.
+  --noquant             Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.
+  --max_seq_length MAX_SEQ_LENGTH
+                        The maximum sequence length to use in finetuning. Should most likely line up with your base model's default max_seq_length. Default is 512.
+  --num_train_epochs NUM_TRAIN_EPOCHS
+                        Number of epochs to use. 2 is default and has been shown to work well.
+  --batch_size BATCH_SIZE
+                        The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
+  --threads_output_name THREADS_OUTPUT_NAME
+                        If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
+  --thread_template THREAD_TEMPLATE
+                        A file containing the thread template to use. Default is threads/template_fefault.txt
+```
 
 6. Run inference using the newly created QLoRA model.
 
-`python run_inference.py [TUNED_MODEL] [INSTRUCTION_PROMPT] [INPUT]`
+```
+usage: run_inference.py [-h] model_name instruction_prompt input
 
-Parameters:
+Script to run inference on a tuned model.
 
-* `[TUNED_MODEL]` The name of the resulting tuned model that you pushed to Huggingface in the previous step.
-* `[INSTRUCTION_PROMPT]` An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Should be something like this:
-    * EN: You are a generic chatbot that always answers in English.
-    * ES: Eres un chatbot genérico que siempre responde en español.
-    * FR: Tu es un chatbot générique qui répond toujours en français.
-    * NL: Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft.
-    * AR: أنت روبوت محادثة عام يجيب دائمًا باللغة العربية
-* `[INPUT]` The actual chat input prompt. Script is only meant for testing purposes and currently exits directly after answering. Run twice to incorporate the history of the previous answer.
+positional arguments:
+  model_name          The name of the tuned model that you pushed to Huggingface in the previous
+                      step.
+  instruction_prompt  An instruction message added to every prompt given to the chatbot to force
+                      it to answer in the target language.
+  input               The actual chat input prompt. The script is only meant for testing purposes
+                      and exits after answering.
+
+options:
+  -h, --help          show this help message and exit
+
+```
+
+# Choosing the right translation model
+> How do I know which translation model to choose for my target language?
+
+**We got you covered** with out `benchmark.py` script that helps make somewhat of a good guess (the dataset we use is the same as the OPUS models are trained on so the outcomes are always favorable towards OPUS). For usage, see the help of this script below. Models are loaded in 4-bit quantization and run on a small sample of the OPUS books subset.
+
+Be sure to use the most commonly occurring languages in your base dataset as source_language and your target translation language as target_language. For OASST1 for example, be sure to at least run `en` and `es` as source languages.
+
+```
+usage: benchmark.py [-h] [--cpu] [--start START] [--n N] [--max_length MAX_LENGTH] source_language target_language included_models
+
+Benchmark all the different translation models for a specific source and target language to find out which performs best. This uses 4bit quantization to limit GPU usage. Note:
+the outcomes are indicative - you cannot assume corretness of the BLEU and CHRF scores but you can compare models against each other relatively.
+
+positional arguments:
+  source_language       The source language you want to test for. Check your dataset to see which occur most prevalent or use English as a good start.
+  target_language       The source language you want to test for. This should be the language you want to apply the translate script on. Note: in benchmark, we use 2-character
+                        language codes, in constrast to translate.py where you need to specify whatever your model expects.
+  included_models       Comma-separated list of models to include. Allowed values are: opus, m2m_418m, m2m_1.2b, madlad_3b, madlad_7b, madlad_10b, madlad_7bbt, mbart,
+                        nllb_distilled600m, nllb_1.3b, nllb_distilled1.3b, nllb_3.3b, seamless
+
+options:
+  -h, --help            show this help message and exit
+  --cpu                 Forces usage of CPU. By default GPU is taken if available.
+  --start START         The starting offset to include sentences from the OPUS books dataset from. Defaults to 0.
+  --n N                 The number of sentences to benchmark on. Defaults to 100.
+  --max_length MAX_LENGTH
+                        How much tokens to generate at most. More tokens might be more accurate for lengthy input but creates a risk of running out of memory. Default is 512.
+```
 
 # Datasets and models
 
-We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repor and create datasets and models for other languages, then create a PR.
+We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repo and create datasets and models for other languages, then create a PR.
 
-## Translated oasst1 datasets
+## Translated oasst1 datasets using OPUS
 
 - [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) The oasst1 dataset translated to Dutch.
 - [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) The oasst1 dataset translated to Spanish.
@@ -128,6 +255,10 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) The oasst1 dataset translated to Russian.
 - [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) The oasst1 dataset translated to Hindi.
 - [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) The oasst1 dataset translated to Chinese.
+- [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) The oasst1 dataset translated to Polish.
+- [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) The oasst1 dataset translated to Japanese.
+- [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) The oasst1 dataset translated to Basque.
+- [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) The oasst1 dataset translated to Bengali.
 
 ## Translated LLaMa2 thread chat prompt datasets
 
@@ -142,7 +273,9 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/oasst1_ru_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_ru_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Russian.
 - [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Hindi.
 - [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Chinese.
-
+- [chrystians/Jestes](https://huggingface.co/datasets/chrystians/Jestes) The LLaMa2 chat prompts with history from threads in oasst1 for Polish.
+- [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Basque.
+- [UnderstandLing/oasst1_bn_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_bn_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Bengali.
 
 ## Language-specific LLaMa2-7B chat model adapters
 
@@ -151,12 +284,18 @@ We have created and will continue to create numerous datasets and models already
 - [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
 - [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
 - [xaviviro/llama-2-7b-chat-ca](https://huggingface.co/xaviviro/llama-2-7b-chat-ca) QLoRA adapter for LLaMa2-7b-chat in Catalan.
-- - [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
+- [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
 - [HeshamHaroon/llama-2-7b-chat-ar](https://huggingface.co/HeshamHaroon/llama-2-7b-chat-ar) QLoRA adapter for LLaMa2-7b-chat in Arabic.
 - [UnderstandLing/llama-2-7b-chat-it](https://huggingface.co/UnderstandLing/llama-2-7b-chat-it) QLoRA adapter for LLaMa2-7b-chat in Italian.
 - [UnderstandLing/llama-2-7b-chat-ru](https://huggingface.co/UnderstandLing/llama-2-7b-chat-ru) QLoRA adapter for LLaMa2-7b-chat in Russian.
 - [UnderstandLing/llama-2-7b-chat-hi](https://huggingface.co/UnderstandLing/llama-2-7b-chat-hi) QLoRA adapter for LLaMa2-7b-chat in Hindi.
 - [UnderstandLing/llama-2-7b-chat-zh](https://huggingface.co/UnderstandLing/llama-2-7b-chat-zh) QLoRA adapter for LLaMa2-7b-chat in Chinese.
+- [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) QLoRA adapter for LLaMa2-7b-chat in Polish.
+- [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
+- [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) QLoRA adapter for LLaMa2-7b-chat in Bengali.
+
+## Language-specific Mistral chat model adapters
+- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
 
 ## Language-specific LLaMa2-13B chat model adapters
 
@@ -172,21 +311,27 @@ We have created and will continue to create numerous datasets and models already
 
 ## Dutch
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s>`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s>`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam<s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wat is de hoofdstad van Nederland? [/INST] Amsterdam</s><s>[INST] Hoeveel inwoners heeft die stad? [/INST] 850 duizend inwoners (2023)</s><s>[INST] In welke provincie ligt die stad? [/INST] In de provincie Noord-Holland</s>`
 
-`[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.`
+`<s>[INST] <<SYS>> Je bent een generieke chatbot die altijd in het Nederlands antwoord geeft. <</SYS>> Wie is de minister-president van Nederland? [/INST] Mark Rutte is sinds 2010 minister-president van Nederland. Hij is meerdere keren herkozen.</s>`
 
 # FAQ
 
-* Q: Why do you translate the full OASST1 dataset first? Wouldn't it be faster to only translate highest ranked threads?
-* A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1 translations to the community as we believe they can be useful on their own.
+* Q: Why do you translate the full OASST1/2 dataset first? Wouldn't it be faster to only translate highest ranked threads?
+* A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1/2 translations to the community as we believe they can be useful on their own.
 
 * Q: How well do the fine-tunes perform compared to vanilla LLaMa2?
 * A: While we do not have formal benchmarks, getting LLaMa2 to consistently speak another language than English to begin with is challenging if not impossible. The non-English language it does produce is often grammatically broken. Our fine-tunes do not show this behavior.
 
 * Q: Can I use other frameworks for fine-tuning?
 * A: Yes you can, we use [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) for training on multi-GPU setups.
+
+* Q: Can I mix different translation models?
+* A: Absolutely, we think it might even increase performance to have translation done by multiple models. You can achieve this by early-stopping a translation and continuing from the checkpoints by reruning the translate script with a different translation model.
+
+# Funding
+We are based in the Netherland and actively looking for funding to democratize AI and advance its applications. Contact us at funding@understandling.com if you want to invest.
