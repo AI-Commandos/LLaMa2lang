@@ -51,6 +51,9 @@ class GeminiProTranslator(BaseTranslator):
                 decoded_result = codecs.escape_decode(result)[0].decode("utf8")
                 return decoded_result
             except:
+                print(response.candidates)
+                if len(response.candidates) == 0:
+                    return
                 result = "".join(map(lambda part: part.text, response.candidates[0].content.parts))
                 decoded_result = codecs.escape_decode(result)[0].decode("utf8")
                 return decoded_result
@@ -61,7 +64,14 @@ class GeminiProTranslator(BaseTranslator):
             tasks.append(self.translate_text(text, prompt))
             await asyncio.sleep(1)
         results = await asyncio.gather(*tasks)
-        decoded_results = list(map(lambda response: self.decode_result(response), results))
+        decoded_results = []
+        for i in range(0,len(results)):
+            try:
+                decoded_results.append(self.decode_result(results[i]))
+            except:
+                print("Error during translation, returning source language")
+                decoded_results.append(texts[i])
+
         return decoded_results
 
     def translate(self, texts, source_lang, target_lang):
