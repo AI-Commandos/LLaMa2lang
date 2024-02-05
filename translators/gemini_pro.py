@@ -27,14 +27,19 @@ class GeminiProTranslator(BaseTranslator):
 
     async def translate_text(self, text, prompt):
         response = self.model.generate_content(f"{prompt}\n{text}")
+        if response.prompt_feedback:
+            print(text)
+            print(response.prompt_feedback)
+        else:
+            print(response.text)
         return response.text
 
     async def translate_texts(self, texts, prompt):
         tasks = []
         for text in texts:
             tasks.append(self.translate_text(text, prompt))
+            await asyncio.sleep(1)
         results = await asyncio.gather(*tasks)
-        await asyncio.sleep(60) # Need to wait for 60 seconds cause limiting :(
         return results
     def translate(self, texts, source_lang, target_lang):
         if len(texts) > 60:
