@@ -82,7 +82,7 @@ def main():
             translator = mBARTTranslator(device, True, quant4_config, False, max_length)
             model_target_language = translator.language_mapping[target_language]
         elif model.startswith('nllb'):
-            model_size = model.split('_')[1]
+            model_size = model.split('_')[1].upper()
             translator = NLLBTranslator(device, True, quant4_config, False, max_length, model_size)
             # TODO: Extend this later, there are far more languages
             model_target_language = translator.language_mapping[target_language]
