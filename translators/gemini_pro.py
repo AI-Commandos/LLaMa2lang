@@ -18,7 +18,9 @@ class GeminiProTranslator(BaseTranslator):
         'it': 'Italian',
         'ko': 'Korean',
         'zh': 'Chinese',
-        'uk': 'Ukrainian'
+        'uk': 'Ukrainian',
+        'ja': 'Japan',
+        'pl': "Polish"
     }
 
     def __init__(self, access_token, max_length):
