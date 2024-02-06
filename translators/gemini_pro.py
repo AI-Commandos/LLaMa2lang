@@ -1,26 +1,55 @@
 from google.api_core.exceptions import InternalServerError
-
 from translators.base import BaseTranslator
+
 import google.generativeai as genai
 import asyncio
 import codecs
 
 
 class GeminiProTranslator(BaseTranslator):
+    # based on https://ai.google.dev/available_regions#available_languages
+    # make sure that you have access to
     language_mapping = {
-        'en': 'English',
-        'pt': 'Portuguese',
-        'pt-BR': 'Portuguese',
-        'es': 'Spanish',
-        'fr': 'French',
-        'de': 'German',
-        'nl': 'Dutch',
-        'it': 'Italian',
-        'ko': 'Korean',
-        'zh': 'Chinese',
-        'uk': 'Ukrainian',
-        'ja': 'Japan',
-        'pl': "Polish"
+        "en": "English",
+        "pt": "Portuguese",
+        "pt-BR": "Portuguese",
+        "es": "Spanish",
+        "fr": "French",
+        "de": "German",
+        "nl": "Dutch",
+        "it": "Italian",
+        "ko": "Korean",
+        "zh": "Chinese",
+        "uk": "Ukrainian",
+        "uk-UA": "Ukrainian",
+        "ja": "Japan",
+        "pl": "Polish",
+        "ar": "Arabic",
+        "bn": "Bengali",
+        "bg": "Bulgarian",
+        "hr": "Croatian",
+        "cs": "Czech",
+        "da": "Danish",
+        "et": "Estonian",
+        "fi": "Finnish",
+        "el": "Greek",
+        "iw": "Hebrew",
+        "hi": "Hindi",
+        "hu": "Hungarian",
+        "id": "Indonesian",
+        "lv": "Latvian",
+        "lt": "Lithuanian",
+        "no": "Norwegian",
+        "ro": "Romanian",
+        "ru": "Russian",
+        "sr": "Serbian",
+        "sk": "Slovak",
+        "sl": "Slovenian",
+        "sw": "Swahili",
+        "sv": "Swedish",
+        "th": "Thai",
+        "tr": "Turkish",
+        "vi": "Vietnamese"
     }
 
     def __init__(self, access_token, max_length):
@@ -51,7 +80,6 @@ class GeminiProTranslator(BaseTranslator):
                 decoded_result = codecs.escape_decode(result)[0].decode("utf8")
                 return decoded_result
             except:
-                print(response.candidates)
                 if len(response.candidates) == 0:
                     return
                 result = "".join(map(lambda part: part.text, response.candidates[0].content.parts))
