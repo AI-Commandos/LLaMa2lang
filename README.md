@@ -15,6 +15,9 @@ python combine_checkpoints.py input_folder output_location
 # Finetune
 python finetune.py tuned_model dataset_name instruction_prompt
 
+# Optionally finetune with DPO (RLHF)
+python finetune.py tuned_model dataset_name instruction_prompt
+
 # Run inference
 python run_inference.py model_name instruction_prompt input
 ```
@@ -27,7 +30,8 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 3. Load the translated dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
 4. Turn the threads into prompts following a given template (customizable).
 5. Use QLoRA and PEFT to finetune a base foundation model's instruct finetune on this dataset.
-6. Run inference using the newly trained model.
+6. Use QLoRA and PEFT to finetune with [DPO](https://huggingface.co/docs/trl/main/en/dpo_trainer) to extend the model's capacities even further and teach it preferred answers over rejected ones. Note that your base dataset must have this information.
+7. Run inference using the newly trained model.
 
 # Supported paradigms
 ## Translation
@@ -36,8 +40,8 @@ The process we follow to tune a foundation model such as LLaMa2 for a specific l
 * MADLAD
 * mBART
 * NLLB
-* Seamless
-* Tower Instruct
+* Seamless (Large only)
+* Tower Instruct (Can correct spelling mistakes)
 ## Base datasets
 The following have been tested but potentially more will work
 * OASST1
@@ -48,7 +52,6 @@ The following have been tested but potentially more will work
 * (Unofficial) Mixtral 8x7B
 
 # Roadmap
-* [L2L-4] Add DPO training as RLHF alternative
 * [L2L-6] Investigate interoperability with other libraries (Axolotl, llamacpp, unsloth)
 * [L2L-7] Allow for different quantizations next to QLoRA (GGUF, GPTQ, AWQ)
 * [L2L-10] Support extending the tokenizer and vocabulary
@@ -189,7 +192,51 @@ options:
                         A file containing the thread template to use. Default is threads/template_fefault.txt
 ```
 
-6. Run inference using the newly created QLoRA model.
+6. [OPTIONAL] Finetune using DPO (similar to RLHF)
+```
+usage: finetune_dpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD]
+                       [--base_dataset_role_field BASE_DATASET_ROLE_FIELD] [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
+                       [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
+                       tuned_model dataset_name instruction_prompt
+
+Finetune a base instruct/chat model using (Q)LoRA and PEFT using DPO (RLHF)
+
+positional arguments:
+  tuned_model           The name of the resulting tuned model.
+  dataset_name          The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."
+
+options:
+  -h, --help            show this help message and exit
+  --base_model BASE_MODEL
+                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The dataset's column name containing the actual text to translate. Defaults to text
+  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
+                        The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank
+  --base_dataset_id_field BASE_DATASET_ID_FIELD
+                        The dataset's column name containing the id of a text. Defaults to message_id
+  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
+                        The dataset's column name containing the parent id of a text. Defaults to parent_id
+  --base_dataset_role_field BASE_DATASET_ROLE_FIELD
+                        The dataset's column name containing the role of the author of the text (eg. prompter, assistant). Defaults to role
+  --quant8              Finetunes the model in 8 bits. Requires more memory than the default 4 bit.
+  --noquant             Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.
+  --max_seq_length MAX_SEQ_LENGTH
+                        The maximum sequence length to use in finetuning. Should most likely line up with your base model's default max_seq_length. Default is 512.
+  --max_prompt_length MAX_PROMPT_LENGTH
+                        The maximum length of the prompts to use. Default is 512.
+  --num_train_epochs NUM_TRAIN_EPOCHS
+                        Number of epochs to use. 2 is default and has been shown to work well.
+  --batch_size BATCH_SIZE
+                        The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
+  --threads_output_name THREADS_OUTPUT_NAME
+                        If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
+  --thread_template THREAD_TEMPLATE
+                        A file containing the thread template to use. Default is threads/template_fefault.txt
+```
+
+7. Run inference using the newly created QLoRA model.
 
 ```
 usage: run_inference.py [-h] model_name instruction_prompt input

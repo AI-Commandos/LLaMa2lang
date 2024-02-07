@@ -34,7 +34,7 @@ class Seamless_M4T_V2(BaseTranslator):
         'cs': 'ces'
     }
 
-    def __init__(self, device, quant4, quant4_config, quant8, max_length, model_size):
+    def __init__(self, device, quant4, quant4_config, quant8, max_length):
         super().__init__(device, quant4, quant4_config, quant8, max_length)
 
         model_name = f'facebook/seamless-m4t-v2-large'
