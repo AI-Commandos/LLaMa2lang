@@ -14,6 +14,7 @@ from translators.nllb import NLLBTranslator
 from translators.opus import OPUSTranslator
 from translators.seamless_m4t_v2 import Seamless_M4T_V2
 from translators.towerinstruct import TowerInstructTranslator
+from translators.gemini_pro import GeminiProTranslator
 
 
 # Find the max checkpoint number to continue from
@@ -68,6 +69,10 @@ def main():
                         help="Forces usage of CPU. By default GPU is taken if available.")
     parser.add_argument('--source_lang', type=str, default=None,
                         help="Source language to select from OASST based on lang property of dataset")
+    parser.add_argument('--start_index', type=int, default=None,
+                        help="Set start index for processing in dataset by range")
+    parser.add_argument('--end_index', type=int, default=None,
+                        help="Set end index for processing in dataset by range")
 
     parser_opus = subparsers.add_parser('opus', help='Translate the dataset using HelsinkiNLP OPUS models.')
 
@@ -91,6 +96,10 @@ def main():
 
     parser_towerinstruct = subparsers.add_parser('towerinstruct', help='Translate the dataset using Unbabel\'s Tower Instruct. Make sure your target language is in the 10 languages supported by the model.')
 
+    parser_gemini_pro = subparsers.add_parser('gemini_pro', help='Gemini Pro translation model')
+
+    parser_gemini_pro.add_argument('--auth_token', type=str, default=None,
+                                   help='Gemini Pro retrieved here https://makersuite.google.com/app/apikey')
     # Default arguments shared across models
     args = parser.parse_args()
     model = args.model
@@ -105,6 +114,8 @@ def main():
     batch_size = args.batch_size
     force_cpu = args.cpu
     selected_source_language = args.source_lang
+    start_index = args.start_index
+    end_index = args.end_index
 
     device = torch.device("cuda:0" if torch.cuda.is_available() and not (force_cpu) else "cpu")
 
@@ -137,6 +148,8 @@ def main():
         translator = Seamless_M4T_V2(device, quant4, quant4_config, quant8, args.max_length)
     elif model == 'towerinstruct':
         translator = TowerInstructTranslator(device, quant4, quant4_config, quant8, args.max_length)
+    elif model == 'gemini_pro':
+        translator = GeminiProTranslator(args.auth_token, args.max_length)
     else:
         translator = OPUSTranslator(device, quant4, quant4_config, quant8, args.max_length)
 
@@ -147,11 +160,13 @@ def main():
             if selected_source_language is not None:
                 records = records_by_lang[selected_source_language]
                 translate_records(base_dataset_lang_field, base_dataset_text_field, batch_size, checkpoint_location,
-                                  checkpoint_n, device, fold, pbar, records, source_lang, target_lang, translator)
+                                  checkpoint_n, device, fold, pbar, records, selected_source_language, target_lang, translator,
+                                  last_checkpoint=start_index, end_of_range=end_index)
             else:
                 for source_lang, records in records_by_lang.items():
                     translate_records(base_dataset_lang_field, base_dataset_text_field, batch_size, checkpoint_location,
-                                      checkpoint_n, device, fold, pbar, records, source_lang, target_lang, translator)
+                                      checkpoint_n, device, fold, pbar, records, source_lang, target_lang, translator,
+                                      last_checkpoint=start_index, end_of_range=end_index)
             # One source language down, release the memory
             gc.collect()
             if str(device).startswith('cuda'):
@@ -159,15 +174,18 @@ def main():
 
 
 def translate_records(base_dataset_lang_field, base_dataset_text_field, batch_size, checkpoint_location, checkpoint_n,
-                      device, fold, pbar, records, source_lang, target_lang, translator):
+                      device, fold, pbar, records, source_lang, target_lang, translator, last_checkpoint = None,
+                      end_of_range = None):
     lang_checkpoint_location = os.path.join(checkpoint_location, fold, f'from_{source_lang}')
     os.makedirs(lang_checkpoint_location, exist_ok=True)
-    last_checkpoint_n = find_largest_checkpoint(lang_checkpoint_location)
+    last_checkpoint_n = last_checkpoint if last_checkpoint is not None else find_largest_checkpoint(lang_checkpoint_location)
     translated_texts = []
+    records_length = len(records) if end_of_range is None else end_of_range
     print(
-        f'[---- LLaMa2Lang ----] Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}')
+        f'[---- LLaMa2Lang ----] Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}, will process till {records_length}')
+    pbar.total = records_length
     pbar.update(last_checkpoint_n)
-    for cnt in range(last_checkpoint_n, len(records), batch_size):
+    for cnt in range(last_checkpoint_n, records_length, batch_size):
         # Translate a full batch
         batch = records[cnt:cnt + batch_size]
         texts_to_translate = [record[base_dataset_text_field] for record in batch]
