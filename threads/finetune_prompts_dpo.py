@@ -35,10 +35,10 @@ def find_children_and_highest_ranked_child(
         base_dataset_parent_field: str,
         base_dataset_rank_field: str) -> tuple[DataFrame, DataFrame]:
     children = df[df[base_dataset_parent_field] == parent_id]
-    max_rank = children[base_dataset_rank_field].max()
+    min_rank = children[base_dataset_rank_field].min()
 
     if not children.empty:
-        return children[children[base_dataset_rank_field] == max_rank], children[children[base_dataset_rank_field] != max_rank]
+        return children[children[base_dataset_rank_field] == min_rank], children[children[base_dataset_rank_field] != min_rank]
 
     df_empty = children.iloc[:0, :].copy()
 
@@ -50,9 +50,9 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
     threads = []
     df = dataset.to_pandas()
 
-    # Replace NULLs in rank with a value lower than the lowest rank
-    min_rank = df[base_dataset_rank_field].min()
-    df[base_dataset_rank_field].fillna(min_rank - 1, inplace=True)
+    # Replace NULLs in rank with a value highest than the highest rank
+    max_rank = df[base_dataset_rank_field].max()
+    df[base_dataset_rank_field].fillna(max_rank + 1, inplace=True)
 
     # Identify root messages (those without a parent_id)
     root_messages = df[df[base_dataset_parent_field].isna()]
