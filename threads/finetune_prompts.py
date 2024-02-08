@@ -5,7 +5,7 @@ from tqdm import tqdm
 def find_highest_ranked_child(df, parent_id, base_dataset_parent_field, base_dataset_rank_field):
       children = df[df[base_dataset_parent_field] == parent_id]
       if not children.empty:
-          return children.loc[children[base_dataset_rank_field].idxmax()]
+          return children.loc[children[base_dataset_rank_field].idxmin()]
       return None
 
 # Creates the prompts
@@ -14,9 +14,9 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
     threads = []
     df = dataset.to_pandas()
 
-    # Replace NULLs in rank with a value lower than the lowest rank
-    min_rank = df[base_dataset_rank_field].min()
-    df[base_dataset_rank_field].fillna(min_rank - 1, inplace=True)
+    # Replace NULLs in rank with a value higher than the highest rank
+    max_rank = df[base_dataset_rank_field].max()
+    df[base_dataset_rank_field].fillna(max_rank + 1, inplace=True)
 
     # Identify root messages (those without a parent_id)
     root_messages = df[df[base_dataset_parent_field].isna()]
