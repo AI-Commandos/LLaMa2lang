@@ -48,6 +48,8 @@ def main():
                         help='If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.')
     parser.add_argument('--thread_template', type=str, default="threads/template_default.txt",
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
+    parser.add_argument('--max_steps', type=int, default=-1,
+                        help='The maximum number of steps to run DPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.')
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -66,6 +68,7 @@ def main():
     threads_output_name = args.threads_output_name
     thread_template_file = args.thread_template
     max_prompt_length = args.max_prompt_length
+    max_steps = args.max_steps
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -95,15 +98,15 @@ def main():
         templated_prompts = finetune_prompts_dpo.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, instruction_prompt, chat_template)
         prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=templated_prompts))
 
+    prompts = DatasetDict(prompts)
     # Check if we need to write out
     if threads_output_name is not None:
         # Also do the other folds
         print(f"[---- LLaMa2Lang ----] Writing out DPO thread prompts dataset to {threads_output_name}")
-        dataset_out = DatasetDict(prompts)
         if os.path.isdir(threads_output_name):
-            dataset_out.save_to_disk(threads_output_name)
+            prompts.save_to_disk(threads_output_name)
         else:
-            dataset_out.push_to_hub(threads_output_name)
+            prompts.push_to_hub(threads_output_name)
 
     if noquant:
         # Load base model
@@ -148,25 +151,21 @@ def main():
     )
 
     # Pass quant and lora to trainer
-    use_fp16 = not(noquant or quant8)
     training_params = TrainingArguments(
-        output_dir="./results",
         num_train_epochs=num_train_epochs,
         per_device_train_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=1,
-        optim="paged_adamw_32bit",
-        save_steps=400,
-        logging_steps=200,
-        learning_rate=2e-4,
-        weight_decay=0.001,
-        fp16=use_fp16,
-        bf16=False,
-        max_grad_norm=0.3,
-        max_steps=-1,
-        warmup_ratio=0.03,
-        group_by_length=True,
+        gradient_checkpointing=True,
+        learning_rate=5e-5,
         lr_scheduler_type="cosine",
-        report_to="tensorboard",
+        max_steps=max_steps,
+        save_strategy="no",
+        logging_steps=1,
+        output_dir="./results",
+        optim="paged_adamw_32bit",
+        warmup_steps=100,
+        bf16=True,
+        report_to=None,
         remove_unused_columns=False
     )
 

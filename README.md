@@ -1,4 +1,4 @@
-# LLaMa2lang v0.4
+# LLaMa2lang v0.5
 This repository contains convenience scripts to finetune LLaMa2-7b (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # TL;DR
@@ -194,9 +194,9 @@ options:
 
 6. [OPTIONAL] Finetune using DPO (similar to RLHF)
 ```
-usage: finetune_dpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD]
-                       [--base_dataset_role_field BASE_DATASET_ROLE_FIELD] [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
-                       [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
+usage: finetune_dpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD]
+                       [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH]
+                       [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE] [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE] [--max_steps MAX_STEPS]
                        tuned_model dataset_name instruction_prompt
 
 Finetune a base instruct/chat model using (Q)LoRA and PEFT using DPO (RLHF)
@@ -218,8 +218,6 @@ options:
                         The dataset's column name containing the id of a text. Defaults to message_id
   --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
                         The dataset's column name containing the parent id of a text. Defaults to parent_id
-  --base_dataset_role_field BASE_DATASET_ROLE_FIELD
-                        The dataset's column name containing the role of the author of the text (eg. prompter, assistant). Defaults to role
   --quant8              Finetunes the model in 8 bits. Requires more memory than the default 4 bit.
   --noquant             Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.
   --max_seq_length MAX_SEQ_LENGTH
@@ -234,6 +232,8 @@ options:
                         If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
   --thread_template THREAD_TEMPLATE
                         A file containing the thread template to use. Default is threads/template_fefault.txt
+  --max_steps MAX_STEPS
+                        The maximum number of steps to run DPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.
 ```
 
 7. Run inference using the newly created QLoRA model.

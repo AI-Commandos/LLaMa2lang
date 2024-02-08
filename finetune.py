@@ -96,15 +96,15 @@ def main():
         templated_prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt, chat_template)
         prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=templated_prompts))
 
+    prompts = DatasetDict(prompts)
     # Check if we need to write out
     if threads_output_name is not None:
         # Also do the other folds
         print(f"[---- LLaMa2Lang ----] Writing out thread prompts dataset to {threads_output_name}")
-        dataset_out = DatasetDict(prompts)
         if os.path.isdir(threads_output_name):
-            dataset_out.save_to_disk(threads_output_name)
+            prompts.save_to_disk(threads_output_name)
         else:
-            dataset_out.push_to_hub(threads_output_name)
+            prompts.push_to_hub(threads_output_name)
 
     if noquant:
         # Load base model
