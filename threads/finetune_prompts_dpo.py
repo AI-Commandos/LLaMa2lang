@@ -1,14 +1,11 @@
 from pandas import DataFrame
 from tqdm import tqdm
-from transformers import (
-    AutoTokenizer, PreTrainedTokenizerBase,
-)
 
 def format_dpo(
         thread: list[str],
         system_instruction: str,
         bad_child: str,
-        tokenizer: PreTrainedTokenizerBase,
+        tokenizer,
         chat_template) \
         -> dict[str, str]:
     chat = [
@@ -23,8 +20,9 @@ def format_dpo(
         else:
             chat.append({"role": "assistant", "content": thread[i]})
 
-    formatted_thread['prompt'] = tokenizer.apply_chat_template(chat)[len(tokenizer.bos_token):]
-    formatted_thread['chosen'] = thread[len(thread) - 1]
+    # Run it untokenized so we can write it out
+    formatted_thread['prompt'] = tokenizer.apply_chat_template(chat, tokenize=False, chat_template=chat_template)[len(tokenizer.bos_token):]
+    formatted_thread['chosen'] = thread[-1]
     formatted_thread['rejected'] = bad_child
 
     return formatted_thread
