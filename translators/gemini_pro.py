@@ -8,7 +8,7 @@ import codecs
 
 class GeminiProTranslator(BaseTranslator):
     # based on https://ai.google.dev/available_regions#available_languages
-    # make sure that you have access to
+    # make sure that you have access to Gemini Region
     language_mapping = {
         "en": "English",
         "pt": "Portuguese",
@@ -62,6 +62,7 @@ class GeminiProTranslator(BaseTranslator):
 
     async def translate_text(self, text, prompt):
         try:
+            ## Need to ignore safety to correctly translate input from different languages
             result = self.model.generate_content_async(f"{prompt}\n{text}", safety_settings={'HARASSMENT': 'block_none',
                                                                                 'HARM_CATEGORY_SEXUALLY_EXPLICIT': 'block_none',
                                                                                 'harm_category_dangerous_content': 'block_none',
