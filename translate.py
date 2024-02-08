@@ -93,9 +93,6 @@ def main():
 
     parser_seamlessv2 = subparsers.add_parser('seamless_m4t_v2',
                                         help='Translate the dataset using Facebook\'s SeamlessM4T-v2 multimodal models.')
-    parser_seamlessv2.add_argument('--model_size', type=str, default="medium",
-                             choices=['medium', 'large'],
-                             help='The size of the SeamlessM4T model to use. Default is medium')
 
     parser_towerinstruct = subparsers.add_parser('towerinstruct', help='Translate the dataset using Unbabel\'s Tower Instruct. Make sure your target language is in the 10 languages supported by the model.')
 
@@ -148,7 +145,7 @@ def main():
     elif model == 'nllb':
         translator = NLLBTranslator(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
     elif model == 'seamless_m4t_v2':
-        translator = Seamless_M4T_V2(device, quant4, quant4_config, quant8, args.max_length, args.model_size)
+        translator = Seamless_M4T_V2(device, quant4, quant4_config, quant8, args.max_length)
     elif model == 'towerinstruct':
         translator = TowerInstructTranslator(device, quant4, quant4_config, quant8, args.max_length)
     elif model == 'gemini_pro':

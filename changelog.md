@@ -1,4 +1,8 @@
 # Change info
+_v0.5_
+* **[2024-02-08]** Added DPO training as an RLHF substitute.
+* **[2024-02-08]** Added more translation methods like Tower Instruct (LLM) and Google Gemini via API (no GPU required)
+
 _v0.4_
 * **[2024-01-18]** The create threads script has been removed. We now directly use the chat template provided by the base model's tokenizer, thus supporting mutliple chat/instruct/prompt templates.
 

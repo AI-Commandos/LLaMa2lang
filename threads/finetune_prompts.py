@@ -2,10 +2,10 @@ import pandas as pd
 from tqdm import tqdm
 
 # We only continue the thread with the highest ranked answer to each input
-def find_highest_ranked_child(df, parent_id):
-      children = df[df['parent_id'] == parent_id]
+def find_highest_ranked_child(df, parent_id, base_dataset_parent_field, base_dataset_rank_field):
+      children = df[df[base_dataset_parent_field] == parent_id]
       if not children.empty:
-          return children.loc[children['rank'].idxmax()]
+          return children.loc[children[base_dataset_rank_field].idxmax()]
       return None
 
 # Creates the prompts
@@ -34,7 +34,7 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
                     'role': 'user'
                 }
             ]
-            next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field])
+            next_message = find_highest_ranked_child(df, root_message[base_dataset_id_field], base_dataset_parent_field, base_dataset_rank_field)
         
             while next_message is not None:
                 role = next_message[base_dataset_role_field]
@@ -44,7 +44,7 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
                     'content': next_message[base_dataset_text_field],
                     'role': role
                 })
-                next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field])
+                next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field], base_dataset_parent_field, base_dataset_rank_field)
         
             # Turn this into LLaMa2 format
             try:

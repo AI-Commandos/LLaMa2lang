@@ -1,6 +1,6 @@
 import os
 import torch
-from datasets import load_dataset, load_from_disk
+from datasets import load_dataset, load_from_disk, Dataset, DatasetDict
 from transformers import (
     AutoModelForCausalLM,
     AutoTokenizer,
@@ -8,15 +8,14 @@ from transformers import (
     TrainingArguments,
 )
 from peft import LoraConfig
-from trl import SFTTrainer
+from trl import DPOTrainer
 import sys
 import argparse
-from threads import finetune_prompts
-from datasets import Dataset, DatasetDict
+from threads import finetune_prompts_dpo
 import pandas as pd
 
 def main():
-    parser = argparse.ArgumentParser(description="Finetune a base instruct/chat model using (Q)LoRA and PEFT")
+    parser = argparse.ArgumentParser(description="Finetune a base instruct/chat model using (Q)LoRA and PEFT using DPO (RLHF)")
     parser.add_argument('tuned_model', type=str,
                         help='The name of the resulting tuned model.')
     parser.add_argument('dataset_name', type=str,
@@ -33,14 +32,14 @@ def main():
                         help="The dataset's column name containing the id of a text. Defaults to message_id")
     parser.add_argument('--base_dataset_parent_field', type=str, default="parent_id",
                         help="The dataset's column name containing the parent id of a text. Defaults to parent_id")
-    parser.add_argument('--base_dataset_role_field', type=str, default="role",
-                        help="The dataset's column name containing the role of the author of the text (eg. prompter, assistant). Defaults to role")
     parser.add_argument('--quant8', action='store_true',
                         help='Finetunes the model in 8 bits. Requires more memory than the default 4 bit.')
     parser.add_argument('--noquant', action='store_true',
                         help='Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.')
     parser.add_argument('--max_seq_length', type=int, default=512,
                         help='The maximum sequence length to use in finetuning. Should most likely line up with your base model\'s default max_seq_length. Default is 512.')
+    parser.add_argument('--max_prompt_length', type=int, default=512,
+                        help='The maximum length of the prompts to use. Default is 512.')
     parser.add_argument('--num_train_epochs', type=int, default=2,
                         help='Number of epochs to use. 2 is default and has been shown to work well.')
     parser.add_argument('--batch_size', type=int, default=4,
@@ -49,6 +48,8 @@ def main():
                         help='If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.')
     parser.add_argument('--thread_template', type=str, default="threads/template_default.txt",
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
+    parser.add_argument('--max_steps', type=int, default=-1,
+                        help='The maximum number of steps to run DPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.')
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -59,7 +60,6 @@ def main():
     base_dataset_rank_field = args.base_dataset_rank_field
     base_dataset_id_field = args.base_dataset_id_field
     base_dataset_parent_field = args.base_dataset_parent_field
-    base_dataset_role_field = args.base_dataset_role_field
     quant8 = args.quant8
     noquant = args.noquant
     max_seq_length = args.max_seq_length
@@ -67,6 +67,8 @@ def main():
     per_device_train_batch_size = args.batch_size
     threads_output_name = args.threads_output_name
     thread_template_file = args.thread_template
+    max_prompt_length = args.max_prompt_length
+    max_steps = args.max_steps
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -88,19 +90,19 @@ def main():
     # Get the template
     with open(thread_template_file, 'r', encoding="utf8") as f:
         chat_template = f.read()
-    
+
     # Compute the threads
     prompts = {k: [] for k in dataset.keys()}
     for fold in prompts:
         print(f"[---- LLaMa2Lang ----] Generating prompts using chat template {thread_template_file} for fold {fold}")
-        templated_prompts = finetune_prompts.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, base_dataset_role_field, instruction_prompt, chat_template)
+        templated_prompts = finetune_prompts_dpo.create_prompts(dataset[fold], tokenizer, base_dataset_rank_field, base_dataset_parent_field, base_dataset_id_field, base_dataset_text_field, instruction_prompt, chat_template)
         prompts[fold] = Dataset.from_pandas(pd.DataFrame(data=templated_prompts))
 
     prompts = DatasetDict(prompts)
     # Check if we need to write out
     if threads_output_name is not None:
         # Also do the other folds
-        print(f"[---- LLaMa2Lang ----] Writing out thread prompts dataset to {threads_output_name}")
+        print(f"[---- LLaMa2Lang ----] Writing out DPO thread prompts dataset to {threads_output_name}")
         if os.path.isdir(threads_output_name):
             prompts.save_to_disk(threads_output_name)
         else:
@@ -128,10 +130,12 @@ def main():
         )
         # Load base model
         model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0})
-
+    
     model.config.use_cache = False
     model.config.pretraining_tp = 1
 
+    # Load base tokenizer
+    tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     # Just like Alpaca, because we allow to add history in the prompts, it makes more sense to do left-padding to have the most informative text at the end.
     # In this case, we need a different pad token than EOS because we actually do _not_ pad end of sentence.
     tokenizer.pad_token_id = 0
@@ -147,43 +151,41 @@ def main():
     )
 
     # Pass quant and lora to trainer
-    use_fp16 = not(noquant or quant8)
     training_params = TrainingArguments(
-        output_dir="./results",
         num_train_epochs=num_train_epochs,
         per_device_train_batch_size=per_device_train_batch_size,
         gradient_accumulation_steps=1,
+        gradient_checkpointing=True,
+        learning_rate=5e-5,
+        lr_scheduler_type="cosine",
+        max_steps=max_steps,
+        save_strategy="no",
+        logging_steps=1,
+        output_dir="./results",
         optim="paged_adamw_32bit",
-        save_steps=400,
-        logging_steps=200,
-        learning_rate=2e-4,
-        weight_decay=0.001,
-        fp16=use_fp16,
-        bf16=False,
-        max_grad_norm=0.3,
-        max_steps=-1,
-        warmup_ratio=0.03,
-        group_by_length=True,
-        lr_scheduler_type="constant",
-        report_to="tensorboard"
+        warmup_steps=100,
+        bf16=True,
+        report_to=None,
+        remove_unused_columns=False
     )
-    trainer = SFTTrainer(
+
+    trainer = DPOTrainer(
         model=model,
-        train_dataset=prompts['train'],
-        peft_config=peft_params,
-        dataset_text_field=base_dataset_text_field,
-        max_seq_length=max_seq_length,
-        tokenizer=tokenizer,
+        ref_model=None,
         args=training_params,
-        packing=False,
+        train_dataset=prompts['train'],
+        tokenizer=tokenizer,
+        peft_config=peft_params,
+        beta=0.1,
+        max_prompt_length=max_prompt_length,
+        max_length=max_seq_length,
     )
 
     # Before starting training, free up memory
     torch.cuda.empty_cache()
-    print(f"[---- LLaMa2Lang ----] Starting training")
-    # Train the model
+    # Train the DPO model
     trainer.train()
-
+    
     # Check if output location is a valid directory
     print(f"[---- LLaMa2Lang ----] Writing model and tokenizer out to {tuned_model}")
     if os.path.isdir(tuned_model):
@@ -193,6 +195,7 @@ def main():
         # Try to push to hub, requires HF_TOKEN environment variable to be set, see https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hftoken
         trainer.model.push_to_hub(tuned_model)
         trainer.tokenizer.push_to_hub(tuned_model)
+
 
 if __name__ == "__main__":
     main()
