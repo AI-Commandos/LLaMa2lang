@@ -13,3 +13,4 @@ pandas==1.5.3
 stanza==1.7.0
 tqdm
 sacrebleu
+google-generativeai
