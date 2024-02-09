@@ -24,6 +24,7 @@ class OPUSTranslator(BaseTranslator):
                 model_i, tokenizer_i = self.get_helsinki_nlp_model(source_lang, 'en')
                 model_t, tokenizer_t = self.get_helsinki_nlp_model('en', target_lang)
                 if model_i is None or tokenizer_i is None or model_t is None or tokenizer_t is None:
+                    print(f"[---- LLaMa2Lang ----] No translation possible from {source_lang} to {target_lang}")
                     return None
 
                 # To intermediate language first
@@ -92,5 +93,4 @@ class OPUSTranslator(BaseTranslator):
                     model_name = self.alternative_models[model_key]
                     return self.load_model(model_name, model_key)
                 except Exception as e:
-                    print(f"[---- LLaMa2Lang ----] No translation possible from {source_lang} to {target_lang}")
                     return None, None
