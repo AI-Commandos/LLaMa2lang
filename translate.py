@@ -185,7 +185,7 @@ def translate_records(base_dataset_lang_field, base_dataset_text_field, batch_si
         f'[---- LLaMa2Lang ----] Got {len(records)} records for source language {source_lang}, skipping {last_checkpoint_n}, will process till {records_length}')
     pbar.total = records_length
     pbar.update(last_checkpoint_n)
-    last_cnt = 0
+    last_cnt = last_checkpoint_n
     for cnt in range(last_checkpoint_n, records_length, batch_size):
         # Translate a full batch
         batch = records[cnt:cnt + batch_size]
@@ -215,6 +215,7 @@ def translate_records(base_dataset_lang_field, base_dataset_text_field, batch_si
                 torch.cuda.empty_cache()
         last_cnt = cnt
     # Write checkpoint
+    batch = records[last_cnt:]
     checkpoint_file = os.path.join(lang_checkpoint_location, f'upto_{last_cnt}.json')
     with open(checkpoint_file, 'w', encoding='utf-8') as f:
         json.dump(batch, f)
