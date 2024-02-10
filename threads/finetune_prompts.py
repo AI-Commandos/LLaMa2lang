@@ -23,6 +23,8 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
 
     with tqdm(total=len(root_messages)) as pbar:
         for _, root_message in root_messages.iterrows():
+            if root_message[base_dataset_text_field] is None:
+                continue
             # Create the thread
             thread = [
                 {
