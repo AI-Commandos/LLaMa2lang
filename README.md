@@ -289,40 +289,22 @@ options:
 
 We have created and will continue to create numerous datasets and models already. **Want to help democratize LLMs?** Clone the repo and create datasets and models for other languages, then create a PR.
 
-## Translated oasst1 datasets using OPUS
+## Translated oasst1 datasets
 
-- [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) The oasst1 dataset translated to Dutch.
-- [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) The oasst1 dataset translated to Spanish.
-- [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) The oasst1 dataset translated to French.
-- [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) The oasst1 dataset translated to German.
-- [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) The oasst1 dataset translated to Catalan.
-- [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) The oasst1 dataset translated to Portuguese.
-- [HeshamHaroon/oasst-arabic](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic) The oasst1 dataset translated Arabic.
-- [UnderstandLing/oasst1_it](https://huggingface.co/datasets/UnderstandLing/oasst1_it) The oasst1 dataset translated to Italian.
-- [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) The oasst1 dataset translated to Russian.
-- [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) The oasst1 dataset translated to Hindi.
-- [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) The oasst1 dataset translated to Chinese.
-- [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) The oasst1 dataset translated to Polish.
-- [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) The oasst1 dataset translated to Japanese.
-- [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) The oasst1 dataset translated to Basque.
-- [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) The oasst1 dataset translated to Bengali.
+|  |  |  |  |  |  |
+|---------|---------|---------|---------|---------|---------|
+| Dutch [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) | Spanish [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) | French [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) | German [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) | Catalan [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) | Portuguese [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) |
+| Arabic [HeshamHaroon/oasst-arabic](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic) | Italian [UnderstandLing/oasst1_it](https://huggingface.co/datasets/UnderstandLing/oasst1_it) | Russian [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) | Hindi [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) | Chinese [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) | Polish [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) |
+| Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | | | |
+
 
 ## Translated LLaMa2 thread chat prompt datasets
 
-- [UnderstandLing/oasst1_nl_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_nl_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Dutch.
-- [UnderstandLing/oasst1_es_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_es_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Spanish.
-- [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) The LLaMa2 chat prompts with history from threads in oasst1 for French.
-- [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) The LLaMa2 chat prompts with history from threads in oasst1 for German.
-- [xaviviro/oasst1_ca_threads](https://huggingface.co/datasets/xaviviro/oasst1_ca_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Catalan.
-- [UnderstandLing/oasst1_pt_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_pt_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Portuguese.
-- [HeshamHaroon/oasst1-ar-threads](https://huggingface.co/datasets/HeshamHaroon/oasst1-ar-threads) The LLaMa2 chat prompts with history from threads in oasst1 for Arabic.
-- [UnderstandLing/oasst1_it_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_it_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Italian.
-- [UnderstandLing/oasst1_ru_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_ru_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Russian.
-- [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Hindi.
-- [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Chinese.
-- [chrystians/Jestes](https://huggingface.co/datasets/chrystians/Jestes) The LLaMa2 chat prompts with history from threads in oasst1 for Polish.
-- [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Basque.
-- [UnderstandLing/oasst1_bn_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_bn_threads) The LLaMa2 chat prompts with history from threads in oasst1 for Bengali.
+|  |  |  |  |  |  |
+|---------|---------|---------|---------|---------|---------|
+| Dutch [UnderstandLing/oasst1_nl_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_nl_threads) | Spanish [UnderstandLing/oasst1_es_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_es_threads) | French [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) | German [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) | Catalan [xaviviro/oasst1_ca_threads](https://huggingface.co/datasets/xaviviro/oasst1_ca_threads) | Portuguese [UnderstandLing/oasst1_pt_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_pt_threads) |
+| Arabic [HeshamHaroon/oasst-arabic_threads](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic_threads) | Italian [UnderstandLing/oasst1_it_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_it_threads) | Russian [UnderstandLing/oasst1_ru_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_ru_threads) | Hindi [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) | Chinese [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) | Polish [chrystians/oasst1_pl_threads](https://huggingface.co/datasets/chrystians/oasst1_pl_threads) |
+| Japanese [UnderstandLing/oasst1_jap_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_jap_threads) | Basque [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) | Bengali [UnderstandLing/oasst1_bn_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_bn_threads) | | | |
 
 ## Language-specific LLaMa2-7B chat model adapters
 
