@@ -16,7 +16,7 @@ python combine_checkpoints.py input_folder output_location
 python finetune.py tuned_model dataset_name instruction_prompt
 
 # Optionally finetune with DPO (RLHF)
-python finetune.py tuned_model dataset_name instruction_prompt
+python finetune_dpo.py tuned_model dataset_name instruction_prompt
 
 # Run inference
 python run_inference.py model_name instruction_prompt input
