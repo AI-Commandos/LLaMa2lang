@@ -88,7 +88,7 @@ def main():
             model_target_language = translator.language_mapping[target_language]
         elif model.startswith('seamless'):
             model_size = 'large' # Currently only one on HF
-            translator = Seamless_M4T_V2(device, True, quant4_config, False, max_length, model_size)
+            translator = Seamless_M4T_V2(device, True, quant4_config, False, max_length)
         else:
             translator = OPUSTranslator(device, False, quant4_config, False, max_length)
         
