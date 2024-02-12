@@ -13,7 +13,7 @@ class MADLADTranslator(BaseTranslator):
         model_name = f'google/madlad400-{self.model_size}-mt'
         # Quick rewrite the model name for bt
         if self.model_size == '7b-bt':
-            model_name = f'google/madlad400-{self.model_size}-mt-bt'
+            model_name = 'google/madlad400-7b-mt-bt'
         # Load model and tokenizer
         if self.quant4:
             model = T5ForConditionalGeneration.from_pretrained(model_name, device_map=device, quantization_config=self.quant4_config, load_in_4bit=True)
