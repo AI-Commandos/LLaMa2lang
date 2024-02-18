@@ -28,7 +28,8 @@ class NLLBTranslator(BaseTranslator):
         'da': 'dan_Latn',
         'th': 'tha_Thai',
         'sv': 'swe_Latn',
-        'cs': 'ces_Latn'
+        'cs': 'ces_Latn',
+        'nl': 'nld_Latn'
     }
 
     def __init__(self, device, quant4, quant4_config, quant8, max_length, model_size):
