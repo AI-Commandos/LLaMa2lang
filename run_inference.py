@@ -45,7 +45,7 @@ def main():
             break
         elif user_input.lower() == ':n':
             thread = [{'role': 'system', 'content': instruction_prompt}]
-            break
+            continue
         
         # Prepare input in LLaMa2 chat format
         thread.append({
