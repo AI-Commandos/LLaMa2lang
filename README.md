@@ -325,8 +325,8 @@ We have created and will continue to create numerous datasets and models already
 
 ## Language-specific Mistral chat model adapters
 - [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
-- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-es) QLoRA adapter for Mistral-7B-Instruct in Spanish.
-- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-de) QLoRA adapter for Mistral-7B-Instruct in German.
+- [UnderstandLing/Mistral-7B-Instruct-v0.2-es](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-es) QLoRA adapter for Mistral-7B-Instruct in Spanish.
+- [UnderstandLing/Mistral-7B-Instruct-v0.2-de](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-de) QLoRA adapter for Mistral-7B-Instruct in German.
 
 ## Language-specific LLaMa2-13B chat model adapters
 
