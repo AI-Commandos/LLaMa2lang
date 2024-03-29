@@ -295,7 +295,7 @@ We have created and will continue to create numerous datasets and models already
 |---------|---------|---------|---------|---------|---------|
 | Dutch [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) | Spanish [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) | French [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) | German [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) | Catalan [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) | Portuguese [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) |
 | Arabic [HeshamHaroon/oasst-arabic](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic) | Italian [UnderstandLing/oasst1_it](https://huggingface.co/datasets/UnderstandLing/oasst1_it) | Russian [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) | Hindi [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) | Chinese [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) | Polish [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) |
-| Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | | | |
+| Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | Turkish [UnderstandLing/oasst1_tr](https://huggingface.co/datasets/UnderstandLing/oasst1_tr) | | |
 
 
 ## Translated LLaMa2 thread chat prompt datasets
@@ -322,6 +322,7 @@ We have created and will continue to create numerous datasets and models already
 - [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) QLoRA adapter for LLaMa2-7b-chat in Polish.
 - [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
 - [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) QLoRA adapter for LLaMa2-7b-chat in Bengali.
+- [UnderstandLing/llama-2-7b-chat-tr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-tr) QLoRA adapter for LLaMa2-7b-chat in Turkish.
 
 ## Language-specific Mistral chat model adapters
 - [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
