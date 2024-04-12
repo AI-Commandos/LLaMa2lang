@@ -140,6 +140,21 @@ def main():
     tokenizer.padding_side = "left"
 
     orpo_config = ORPOConfig(
+        num_train_epochs=num_train_epochs,
+        per_device_train_batch_size=per_device_train_batch_size,
+        gradient_accumulation_steps=1,
+        gradient_checkpointing=True,
+        learning_rate=5e-5,
+        lr_scheduler_type="cosine",
+        max_steps=max_steps,
+        save_strategy="no",
+        logging_steps=1,
+        output_dir="./results",
+        optim="paged_adamw_32bit",
+        warmup_steps=100,
+        bf16=True,
+        report_to=None,
+        remove_unused_columns=False,
         beta=0.1, # the lambda/alpha hyperparameter in the paper/code
     )
 
