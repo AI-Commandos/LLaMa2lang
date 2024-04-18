@@ -150,10 +150,9 @@ options:
 5. Turn the translated messages into chat/instruct/prompt threads and finetune a foundate model's instruct using LoRA and PEFT.
 
 ```
-usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD]
-                   [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--base_dataset_role_field BASE_DATASET_ROLE_FIELD]
-                   [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE]
-                   [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
+usage: finetune.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD]
+                   [--base_dataset_role_field BASE_DATASET_ROLE_FIELD] [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE] [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE]
+                   [--padding PADDING]
                    tuned_model dataset_name instruction_prompt
 
 Finetune a base instruct/chat model using (Q)LoRA and PEFT
@@ -161,8 +160,7 @@ Finetune a base instruct/chat model using (Q)LoRA and PEFT
 positional arguments:
   tuned_model           The name of the resulting tuned model.
   dataset_name          The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.
-  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that
-                        always answers in English."
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."
 
 options:
   -h, --help            show this help message and exit
@@ -190,13 +188,14 @@ options:
                         If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
   --thread_template THREAD_TEMPLATE
                         A file containing the thread template to use. Default is threads/template_fefault.txt
+  --padding PADDING     What padding to use, can be either left or right.
 ```
 
-6. [OPTIONAL] Finetune using DPO (similar to RLHF)
+6.1 [OPTIONAL] Finetune using DPO (similar to RLHF)
 ```
-usage: finetune_dpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD]
-                       [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--quant8] [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH]
-                       [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE] [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE] [--max_steps MAX_STEPS]
+usage: finetune_dpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--quant8]
+                       [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE] [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE] [--max_steps MAX_STEPS]
+                       [--padding PADDING]
                        tuned_model dataset_name instruction_prompt
 
 Finetune a base instruct/chat model using (Q)LoRA and PEFT using DPO (RLHF)
@@ -234,6 +233,52 @@ options:
                         A file containing the thread template to use. Default is threads/template_fefault.txt
   --max_steps MAX_STEPS
                         The maximum number of steps to run DPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.
+  --padding PADDING     What padding to use, can be either left or right.
+```
+
+6.1 [OPTIONAL] Finetune using ORPO (similar to RLHF)
+```
+usage: finetune_orpo.py [-h] [--base_model BASE_MODEL] [--base_dataset_text_field BASE_DATASET_TEXT_FIELD] [--base_dataset_rank_field BASE_DATASET_RANK_FIELD] [--base_dataset_id_field BASE_DATASET_ID_FIELD] [--base_dataset_parent_field BASE_DATASET_PARENT_FIELD] [--quant8]
+                        [--noquant] [--max_seq_length MAX_SEQ_LENGTH] [--max_prompt_length MAX_PROMPT_LENGTH] [--num_train_epochs NUM_TRAIN_EPOCHS] [--batch_size BATCH_SIZE] [--threads_output_name THREADS_OUTPUT_NAME] [--thread_template THREAD_TEMPLATE] [--max_steps MAX_STEPS]
+                        [--padding PADDING]
+                        tuned_model dataset_name instruction_prompt
+
+Finetune a base instruct/chat model using (Q)LoRA and PEFT using ORPO (RLHF)
+
+positional arguments:
+  tuned_model           The name of the resulting tuned model.
+  dataset_name          The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.
+  instruction_prompt    An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."
+
+options:
+  -h, --help            show this help message and exit
+  --base_model BASE_MODEL
+                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+  --base_dataset_text_field BASE_DATASET_TEXT_FIELD
+                        The dataset's column name containing the actual text to translate. Defaults to text
+  --base_dataset_rank_field BASE_DATASET_RANK_FIELD
+                        The dataset's column name containing the rank of an answer given to a prompt. Defaults to rank
+  --base_dataset_id_field BASE_DATASET_ID_FIELD
+                        The dataset's column name containing the id of a text. Defaults to message_id
+  --base_dataset_parent_field BASE_DATASET_PARENT_FIELD
+                        The dataset's column name containing the parent id of a text. Defaults to parent_id
+  --quant8              Finetunes the model in 8 bits. Requires more memory than the default 4 bit.
+  --noquant             Do not quantize the finetuning. Requires more memory than the default 4 bit and optional 8 bit.
+  --max_seq_length MAX_SEQ_LENGTH
+                        The maximum sequence length to use in finetuning. Should most likely line up with your base model's default max_seq_length. Default is 512.
+  --max_prompt_length MAX_PROMPT_LENGTH
+                        The maximum length of the prompts to use. Default is 512.
+  --num_train_epochs NUM_TRAIN_EPOCHS
+                        Number of epochs to use. 2 is default and has been shown to work well.
+  --batch_size BATCH_SIZE
+                        The batch size to use in finetuning. Adjust to fit in your GPU vRAM. Default is 4
+  --threads_output_name THREADS_OUTPUT_NAME
+                        If specified, the threads created in this script for finetuning will also be saved to disk or HuggingFace Hub.
+  --thread_template THREAD_TEMPLATE
+                        A file containing the thread template to use. Default is threads/template_fefault.txt
+  --max_steps MAX_STEPS
+                        The maximum number of steps to run ORPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.
+  --padding PADDING     What padding to use, can be either left or right.
 ```
 
 7. Run inference using the newly created QLoRA model.
@@ -291,53 +336,45 @@ We have created and will continue to create numerous datasets and models already
 
 ## Translated oasst1 datasets
 
-|  |  |  |  |  |  |
-|---------|---------|---------|---------|---------|---------|
-| Dutch [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) | Spanish [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) | French [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) | German [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) | Catalan [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) | Portuguese [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) |
-| Arabic [HeshamHaroon/oasst-arabic](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic) | Italian [UnderstandLing/oasst1_it](https://huggingface.co/datasets/UnderstandLing/oasst1_it) | Russian [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) | Hindi [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) | Chinese [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) | Polish [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) |
-| Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | Turkish [UnderstandLing/oasst1_tr](https://huggingface.co/datasets/UnderstandLing/oasst1_tr) | | |
+|  |  |  |  |
+|---------|---------|---------|---------|
+| Dutch [UnderstandLing/oasst1_nl](https://huggingface.co/datasets/UnderstandLing/oasst1_nl) | Spanish [UnderstandLing/oasst1_es](https://huggingface.co/datasets/UnderstandLing/oasst1_es) | French [UnderstandLing/oasst1_fr](https://huggingface.co/datasets/UnderstandLing/oasst1_fr) | German [UnderstandLing/oasst1_de](https://huggingface.co/datasets/UnderstandLing/oasst1_de) |
+| Catalan [xaviviro/oasst1_ca](https://huggingface.co/datasets/xaviviro/oasst1_ca) | Portuguese [UnderstandLing/oasst1_pt](https://huggingface.co/datasets/UnderstandLing/oasst1_pt) | Arabic [HeshamHaroon/oasst-arabic](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic) | Italian [UnderstandLing/oasst1_it](https://huggingface.co/datasets/UnderstandLing/oasst1_it) |
+| Russian [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) | Hindi [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) | Chinese [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) | Polish [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) |
+| Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | Turkish [UnderstandLing/oasst1_tr](https://huggingface.co/datasets/UnderstandLing/oasst1_tr) |
 
 
 ## Translated LLaMa2 thread chat prompt datasets
 
-|  |  |  |  |  |  |
-|---------|---------|---------|---------|---------|---------|
-| Dutch [UnderstandLing/oasst1_nl_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_nl_threads) | Spanish [UnderstandLing/oasst1_es_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_es_threads) | French [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) | German [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) | Catalan [xaviviro/oasst1_ca_threads](https://huggingface.co/datasets/xaviviro/oasst1_ca_threads) | Portuguese [UnderstandLing/oasst1_pt_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_pt_threads) |
-| Arabic [HeshamHaroon/oasst-arabic_threads](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic_threads) | Italian [UnderstandLing/oasst1_it_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_it_threads) | Russian [UnderstandLing/oasst1_ru_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_ru_threads) | Hindi [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) | Chinese [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) | Polish [chrystians/oasst1_pl_threads](https://huggingface.co/datasets/chrystians/oasst1_pl_threads) |
-| Japanese [UnderstandLing/oasst1_jap_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_jap_threads) | Basque [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) | Bengali [UnderstandLing/oasst1_bn_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_bn_threads) | Turkish [UnderstandLing/oasst1_tr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_tr_threads) | | |
+|  |  |  |  |
+|---------|---------|---------|---------|
+| Dutch [UnderstandLing/oasst1_nl_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_nl_threads) | Spanish [UnderstandLing/oasst1_es_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_es_threads) | French [UnderstandLing/oasst1_fr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_fr_threads) | German [UnderstandLing/oasst1_de_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_de_threads) |
+| Catalan [xaviviro/oasst1_ca_threads](https://huggingface.co/datasets/xaviviro/oasst1_ca_threads) | Portuguese [UnderstandLing/oasst1_pt_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_pt_threads) | Arabic [HeshamHaroon/oasst-arabic_threads](https://huggingface.co/datasets/HeshamHaroon/oasst-arabic_threads) | Italian [UnderstandLing/oasst1_it_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_it_threads) |
+| Russian [UnderstandLing/oasst1_ru_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_ru_threads) | Hindi [UnderstandLing/oasst1_hi_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_hi_threads) | Chinese [UnderstandLing/oasst1_zh_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_zh_threads) | Polish [chrystians/oasst1_pl_threads](https://huggingface.co/datasets/chrystians/oasst1_pl_threads) |
+| Japanese [UnderstandLing/oasst1_jap_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_jap_threads) | Basque [xezpeleta/oasst1_eu_threads](https://huggingface.co/datasets/xezpeleta/oasst1_eu_threads) | Bengali [UnderstandLing/oasst1_bn_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_bn_threads) | Turkish [UnderstandLing/oasst1_tr_threads](https://huggingface.co/datasets/UnderstandLing/oasst1_tr_threads) |
 
 ## Language-specific LLaMa2-7B chat model adapters
-
-- [UnderstandLing/llama-2-7b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-7b-chat-nl) QLoRA adapter for LLaMa2-7b-chat in Dutch.
-- [UnderstandLing/llama-2-7b-chat-es](https://huggingface.co/UnderstandLing/llama-2-7b-chat-es) QLoRA adapter for LLaMa2-7b-chat in Spanish.
-- [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) QLoRA adapter for LLaMa2-7b-chat in French.
-- [UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) QLoRA adapter for LLaMa2-7b-chat in German.
-- [xaviviro/llama-2-7b-chat-ca](https://huggingface.co/xaviviro/llama-2-7b-chat-ca) QLoRA adapter for LLaMa2-7b-chat in Catalan.
-- [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) QLoRA adapter for LLaMa2-7b-chat in Portuguese.
-- [HeshamHaroon/llama-2-7b-chat-ar](https://huggingface.co/HeshamHaroon/llama-2-7b-chat-ar) QLoRA adapter for LLaMa2-7b-chat in Arabic.
-- [UnderstandLing/llama-2-7b-chat-it](https://huggingface.co/UnderstandLing/llama-2-7b-chat-it) QLoRA adapter for LLaMa2-7b-chat in Italian.
-- [UnderstandLing/llama-2-7b-chat-ru](https://huggingface.co/UnderstandLing/llama-2-7b-chat-ru) QLoRA adapter for LLaMa2-7b-chat in Russian.
-- [UnderstandLing/llama-2-7b-chat-hi](https://huggingface.co/UnderstandLing/llama-2-7b-chat-hi) QLoRA adapter for LLaMa2-7b-chat in Hindi.
-- [UnderstandLing/llama-2-7b-chat-zh](https://huggingface.co/UnderstandLing/llama-2-7b-chat-zh) QLoRA adapter for LLaMa2-7b-chat in Chinese.
-- [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) QLoRA adapter for LLaMa2-7b-chat in Polish.
-- [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) QLoRA adapter for LLaMa2-7b-chat in Basque.
-- [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) QLoRA adapter for LLaMa2-7b-chat in Bengali.
-- [UnderstandLing/llama-2-7b-chat-tr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-tr) QLoRA adapter for LLaMa2-7b-chat in Turkish.
+|  |  |  |  |
+|---------|---------|---------|---------|
+| [UnderstandLing/llama-2-7b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-7b-chat-nl) Dutch | [UnderstandLing/llama-2-7b-chat-es](https://huggingface.co/UnderstandLing/llama-2-7b-chat-es) Spanish | [UnderstandLing/llama-2-7b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-fr) French |[UnderstandLing/llama-2-7b-chat-de](https://huggingface.co/UnderstandLing/llama-2-7b-chat-de) German |
+[xaviviro/llama-2-7b-chat-ca](https://huggingface.co/xaviviro/llama-2-7b-chat-ca) Catalan | [UnderstandLing/llama-2-7b-chat-pt](https://huggingface.co/UnderstandLing/llama-2-7b-chat-pt) Portuguese | [HeshamHaroon/llama-2-7b-chat-ar](https://huggingface.co/HeshamHaroon/llama-2-7b-chat-ar) Arabic | [UnderstandLing/llama-2-7b-chat-it](https://huggingface.co/UnderstandLing/llama-2-7b-chat-it) Italian |
+[UnderstandLing/llama-2-7b-chat-ru](https://huggingface.co/UnderstandLing/llama-2-7b-chat-ru) Russian | [UnderstandLing/llama-2-7b-chat-hi](https://huggingface.co/UnderstandLing/llama-2-7b-chat-hi) Hindi | [UnderstandLing/llama-2-7b-chat-zh](https://huggingface.co/UnderstandLing/llama-2-7b-chat-zh) Chinese | [chrystians/llama-2-7b-chat-pl-polish-polski](https://huggingface.co/chrystians/llama-2-7b-chat-pl-polish-polski) Polish |
+| [xezpeleta/llama-2-7b-chat-eu](https://huggingface.co/xezpeleta/llama-2-7b-chat-eu) Basque | [UnderstandLing/llama-2-7b-chat-bn](https://huggingface.co/UnderstandLing/llama-2-7b-chat-bn) Bengali | [UnderstandLing/llama-2-7b-chat-tr](https://huggingface.co/UnderstandLing/llama-2-7b-chat-tr) Turkish | |
 
 ## Language-specific Mistral chat model adapters
-- [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) QLoRA adapter for Mistral-7B-Instruct in Dutch.
-- [UnderstandLing/Mistral-7B-Instruct-v0.2-es](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-es) QLoRA adapter for Mistral-7B-Instruct in Spanish.
-- [UnderstandLing/Mistral-7B-Instruct-v0.2-de](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-de) QLoRA adapter for Mistral-7B-Instruct in German.
+|  |  |  |  |
+|---------|---------|---------|---------|
+| [UnderstandLing/Mistral-7B-Instruct-v0.2-nl](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-nl) Dutch | [UnderstandLing/Mistral-7B-Instruct-v0.2-es](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-es) Spanish | [UnderstandLing/Mistral-7B-Instruct-v0.2-de](https://huggingface.co/UnderstandLing/Mistral-7B-Instruct-v0.2-de) German | |
 
 ## Language-specific LLaMa2-13B chat model adapters
-
-- [UnderstandLing/llama-2-13b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-13b-chat-nl) QLoRA adapter for LLaMa2-13B in Dutch.
-- [UnderstandLing/llama-2-13b-chat-es](https://huggingface.co/UnderstandLing/llama-2-13b-chat-es) QLoRA adapter for LLaMa2-13B in Spanish.
-- [UnderstandLing/llama-2-13b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-13b-chat-fr) QLoRA adapter for LLaMa2-13B in French.
+|  |  |  |  |
+|---------|---------|---------|---------|
+| [UnderstandLing/llama-2-13b-chat-nl](https://huggingface.co/UnderstandLing/llama-2-13b-chat-nl) Dutch | [UnderstandLing/llama-2-13b-chat-es](https://huggingface.co/UnderstandLing/llama-2-13b-chat-es) Spanish | [UnderstandLing/llama-2-13b-chat-fr](https://huggingface.co/UnderstandLing/llama-2-13b-chat-fr) French | |
 
 ## Language-specific Mixtral-8x7B chat model adapters
-
-- [UnderstandLing/Mixtral-8x7B-Instruct-nl](https://huggingface.co/UnderstandLing/Mixtral-8x7B-Instruct-nl) QLoRA adapter for Mixtral-8x7B in Dutch.
+|  |  |  |  |
+|---------|---------|---------|---------|
+| [UnderstandLing/Mixtral-8x7B-Instruct-nl](https://huggingface.co/UnderstandLing/Mixtral-8x7B-Instruct-nl) Dutch | | | |
 
 # Empirical performance
 
