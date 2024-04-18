@@ -50,6 +50,8 @@ def main():
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
     parser.add_argument('--max_steps', type=int, default=-1,
                         help='The maximum number of steps to run DPO for. Default is -1 which will run the data through fully for the number of epochs but this will be very time-consuming.')
+    parser.add_argument('--padding', type=str, default="left",
+                        help='What padding to use, can be either left or right.')
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -69,6 +71,7 @@ def main():
     thread_template_file = args.thread_template
     max_prompt_length = args.max_prompt_length
     max_steps = args.max_steps
+    padding = args.padding
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -138,8 +141,11 @@ def main():
     tokenizer = AutoTokenizer.from_pretrained(base_model, trust_remote_code=True)
     # Just like Alpaca, because we allow to add history in the prompts, it makes more sense to do left-padding to have the most informative text at the end.
     # In this case, we need a different pad token than EOS because we actually do _not_ pad end of sentence.
-    tokenizer.pad_token_id = 0
-    tokenizer.padding_side = "left"
+    if padding == 'left':
+        tokenizer.pad_token_id = 0
+    else:
+        tokenizer.pad_token_id = tokenizer.eos_token
+    tokenizer.padding_side = padding
 
     # Set up LoRA configuration
     peft_params = LoraConfig(
