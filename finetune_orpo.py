@@ -142,7 +142,7 @@ def main():
     if padding == 'left':
         tokenizer.pad_token_id = 0
     else:
-        tokenizer.pad_token_id = tokenizer.eos_token
+        tokenizer.pad_token_id = tokenizer.eos_token_id
     tokenizer.padding_side = padding
 
     orpo_config = ORPOConfig(
