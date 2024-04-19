@@ -48,7 +48,7 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
                 })
                 next_message = find_highest_ranked_child(df, next_message[base_dataset_id_field], base_dataset_parent_field, base_dataset_rank_field)
         
-            # Turn this into LLaMa2 format
+            # Turn this into LLaMa3 format
             try:
                 threads.append({'text': tokenizer.apply_chat_template(thread, tokenize=False, chat_template=chat_template)})
             except:

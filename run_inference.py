@@ -47,7 +47,7 @@ def main():
             thread = [{'role': 'system', 'content': instruction_prompt}]
             continue
         
-        # Prepare input in LLaMa2 chat format
+        # Prepare input in LLaMa3 chat format
         thread.append({
             'role': 'user', 'content': user_input
         })
@@ -58,7 +58,7 @@ def main():
         output_sequences = model.generate(
             input_ids=inputs['input_ids'],
             max_length=200,
-            repetition_penalty=1.2 # LLaMa2 is sensitive to repetition
+            repetition_penalty=1.2 # LLaMa3 is sensitive to repetition
         )
         generated_text = tokenizer.decode(output_sequences[0], skip_special_tokens=True)
         print(generated_text)

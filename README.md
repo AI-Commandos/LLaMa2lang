@@ -1,5 +1,8 @@
-# LLaMa2lang v0.5
-This repository contains convenience scripts to finetune LLaMa2-7b (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa2 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
+# 🚀 Now with LLaMa3 support 🚀
+
+
+# LLaMa2lang v0.6
+This repository contains convenience scripts to finetune LLaMa3-8B (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa3 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
 # TL;DR
 
@@ -23,14 +26,15 @@ python run_inference.py model_name instruction_prompt input
 ```
 
 # What it does
-The process we follow to tune a foundation model such as LLaMa2 for a specific language is as follows:
+The process we follow to tune a foundation model such as LLaMa3 for a specific language is as follows:
 
 1. Load a dataset that contains Q&A/instruction pairs.
 2. Translate the entire dataset to a given target language.
 3. Load the translated dataset and extract threads by recursively selecting prompts with their respective answers with the highest rank only, through to subsequent prompts, etc.
 4. Turn the threads into prompts following a given template (customizable).
 5. Use QLoRA and PEFT to finetune a base foundation model's instruct finetune on this dataset.
-6. Use QLoRA and PEFT to finetune with [DPO](https://huggingface.co/docs/trl/main/en/dpo_trainer) to extend the model's capacities even further and teach it preferred answers over rejected ones. Note that your base dataset must have this information.
+6. * Use QLoRA and PEFT to finetune with [DPO](https://huggingface.co/docs/trl/main/en/dpo_trainer) to extend the model's capacities even further and teach it preferred answers over rejected ones. Note that your base dataset must have this information.
+   * Alternatively to DPO, you can achieve the same with [ORPO](https://huggingface.co/docs/trl/main/en/orpo_trainer)
 7. Run inference using the newly trained model.
 
 # Supported paradigms
@@ -47,6 +51,7 @@ The following have been tested but potentially more will work
 * OASST1
 * OASST2
 ## Supported foundation models
+* **LLaMa3**
 * LLaMa2
 * Mistral
 * (Unofficial) Mixtral 8x7B
@@ -165,7 +170,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --base_model BASE_MODEL
-                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+                        The base foundation model. Default is "NousResearch/Meta-Llama-3-8B-Instruct".
   --base_dataset_text_field BASE_DATASET_TEXT_FIELD
                         The dataset's column name containing the actual text to translate. Defaults to text
   --base_dataset_rank_field BASE_DATASET_RANK_FIELD
@@ -208,7 +213,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --base_model BASE_MODEL
-                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+                        The base foundation model. Default is "NousResearch/Meta-Llama-3-8B-Instruct".
   --base_dataset_text_field BASE_DATASET_TEXT_FIELD
                         The dataset's column name containing the actual text to translate. Defaults to text
   --base_dataset_rank_field BASE_DATASET_RANK_FIELD
@@ -253,7 +258,7 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --base_model BASE_MODEL
-                        The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".
+                        The base foundation model. Default is "NousResearch/Meta-Llama-3-8B-Instruct".
   --base_dataset_text_field BASE_DATASET_TEXT_FIELD
                         The dataset's column name containing the actual text to translate. Defaults to text
   --base_dataset_rank_field BASE_DATASET_RANK_FIELD
@@ -343,6 +348,11 @@ We have created and will continue to create numerous datasets and models already
 | Russian [UnderstandLing/oasst1_ru](https://huggingface.co/datasets/UnderstandLing/oasst1_ru) | Hindi [UnderstandLing/oasst1_hi](https://huggingface.co/datasets/UnderstandLing/oasst1_hi) | Chinese [UnderstandLing/oasst1_zh](https://huggingface.co/datasets/UnderstandLing/oasst1_zh) | Polish [chrystians/oasst1_pl](https://huggingface.co/datasets/chrystians/oasst1_pl) |
 | Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | Turkish [UnderstandLing/oasst1_tr](https://huggingface.co/datasets/UnderstandLing/oasst1_tr) |
 
+## Language-specific ❗LLaMa3-8B❗ chat model adapters
+|  |  |  |  |
+|---------|---------|---------|---------|
+| [UnderstandLing/Llama-3-8B-Instruct-nl](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-nl) Dutch | [UnderstandLing/Llama-3-8B-Instruct-es](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-es) Spanish | [UnderstandLing/Llama-3-8B-Instruct-fr](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-fr) French | [UnderstandLing/Llama-3-8B-Instruct-de](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-de) German |
+
 
 ## Translated LLaMa2 thread chat prompt datasets
 
@@ -393,8 +403,8 @@ We have created and will continue to create numerous datasets and models already
 * Q: Why do you translate the full OASST1/2 dataset first? Wouldn't it be faster to only translate highest ranked threads?
 * A: While you can gain quite a lot in terms of throughput time by first creating the threads and then translating them, we provide full OASST1/2 translations to the community as we believe they can be useful on their own.
 
-* Q: How well do the fine-tunes perform compared to vanilla LLaMa2?
-* A: While we do not have formal benchmarks, getting LLaMa2 to consistently speak another language than English to begin with is challenging if not impossible. The non-English language it does produce is often grammatically broken. Our fine-tunes do not show this behavior.
+* Q: How well do the fine-tunes perform compared to vanilla LLaMa3?
+* A: While we do not have formal benchmarks, getting LLaMa3 to consistently speak another language than English to begin with is challenging if not impossible. The non-English language it does produce is often grammatically broken. Our fine-tunes do not show this behavior.
 
 * Q: Can I use other frameworks for fine-tuning?
 * A: Yes you can, we use [Axolotl](https://github.com/OpenAccess-AI-Collective/axolotl) for training on multi-GPU setups.

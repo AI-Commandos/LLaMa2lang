@@ -22,8 +22,8 @@ def main():
                         help='The name of the dataset to use for fine-tuning. This should be the output of the combine_checkpoints script.')
     parser.add_argument('instruction_prompt', type=str, 
                         help='An instruction message added to every prompt given to the chatbot to force it to answer in the target language. Example: "You are a generic chatbot that always answers in English."')
-    parser.add_argument('--base_model', type=str, default="NousResearch/Llama-2-7b-chat-hf",
-                        help='The base foundation model. Default is "NousResearch/Llama-2-7b-chat-hf".')
+    parser.add_argument('--base_model', type=str, default="NousResearch/Meta-Llama-3-8B-Instruct",
+                        help='The base foundation model. Default is "NousResearch/Meta-Llama-3-8B-Instruct".')
     parser.add_argument('--base_dataset_text_field', type=str, default="text",
                         help="The dataset's column name containing the actual text to translate. Defaults to text")
     parser.add_argument('--base_dataset_rank_field', type=str, default="rank",

@@ -1,4 +1,8 @@
 # Change info
+_v0.6_
+* **[2024-04-19]** 👉 Added LLaMa3 support and first models. 👈
+* **[2024-04-12]** Added ORPO training as an RLHF substitute.
+
 _v0.5_
 * **[2024-02-08]** Added DPO training as an RLHF substitute.
 * **[2024-02-08]** Added more translation methods like Tower Instruct (LLM) and Google Gemini via API (no GPU required)
