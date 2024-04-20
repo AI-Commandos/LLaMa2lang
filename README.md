@@ -352,6 +352,7 @@ We have created and will continue to create numerous datasets and models already
 |  |  |  |  |
 |---------|---------|---------|---------|
 | [UnderstandLing/Llama-3-8B-Instruct-nl](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-nl) Dutch | [UnderstandLing/Llama-3-8B-Instruct-es](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-es) Spanish | [UnderstandLing/Llama-3-8B-Instruct-fr](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-fr) French | [UnderstandLing/Llama-3-8B-Instruct-de](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-de) German |
+| [UnderstandLing/Llama-3-8B-Instruct-pt](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-pt) Portuguese | [UnderstandLing/Llama-3-8B-Instruct-it](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-it) Italian | [UnderstandLing/Llama-3-8B-Instruct-hi](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-hi) Hindi | [UnderstandLing/Llama-3-8B-Instruct-ru](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-ru) Russian |
 
 
 ## Translated LLaMa2 thread chat prompt datasets
