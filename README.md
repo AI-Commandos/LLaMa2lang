@@ -349,6 +349,9 @@ We have created and will continue to create numerous datasets and models already
 | Japanese [UnderstandLing/oasst1_jap](https://huggingface.co/datasets/UnderstandLing/oasst1_jap) | Basque [xezpeleta/oasst1_eu](https://huggingface.co/datasets/xezpeleta/oasst1_eu) | Bengali [UnderstandLing/oasst1_bn](https://huggingface.co/datasets/UnderstandLing/oasst1_bn) | Turkish [UnderstandLing/oasst1_tr](https://huggingface.co/datasets/UnderstandLing/oasst1_tr) |
 
 ## Language-specific ❗LLaMa3-8B❗ chat model adapters
+
+Make sure you have access to Meta's [LLaMa3-8B model](https://huggingface.co/meta-llama/Meta-Llama-3-8B) and set your HF_TOKEN before using these models.
+
 |  |  |  |  |
 |---------|---------|---------|---------|
 | [UnderstandLing/Llama-3-8B-Instruct-nl](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-nl) Dutch | [UnderstandLing/Llama-3-8B-Instruct-es](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-es) Spanish | [UnderstandLing/Llama-3-8B-Instruct-fr](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-fr) French | [UnderstandLing/Llama-3-8B-Instruct-de](https://huggingface.co/UnderstandLing/Llama-3-8B-Instruct-de) German |
