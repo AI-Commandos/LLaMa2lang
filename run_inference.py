@@ -16,6 +16,9 @@ def main():
                         help="Forces usage of CPU. By default GPU is taken if available.")
     parser.add_argument('--thread_template', type=str, default="threads/template_default.txt",
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
+    parser.add_argument('--padding', type=str, default="left",
+                        help='What padding to use, can be either left or right.')
+    
 
     args = parser.parse_args()
     model_name = args.model_name
@@ -23,6 +26,7 @@ def main():
     thread_template_file = args.thread_template
     force_cpu = args.cpu
     device = torch.device("cuda:0" if torch.cuda.is_available() and not (force_cpu) else "cpu")
+    padding = args.padding
 
     # Get the template
     with open(thread_template_file, 'r', encoding="utf8") as f:
@@ -33,8 +37,11 @@ def main():
     model = model.merge_and_unload()
     model.eval()
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    tokenizer.pad_token_id = 0
-    tokenizer.padding_side = "left"
+    if padding == 'left':
+        tokenizer.pad_token_id = 0
+    else:
+        tokenizer.pad_token_id = tokenizer.eos_token_id
+    tokenizer.padding_side = padding
 
     thread = [
         {'role': 'system', 'content': instruction_prompt}
