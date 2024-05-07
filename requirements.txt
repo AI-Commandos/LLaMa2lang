@@ -1,5 +1,5 @@
 accelerate==0.25.0
-peft==0.6.2
+peft==0.10.0
 bitsandbytes==0.41.2.post2
 transformers==4.36.2
 trl==0.8.2

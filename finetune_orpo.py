@@ -111,7 +111,7 @@ def main():
 
     if noquant:
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, device_map={"": 0})
+        model = AutoModelForCausalLM.from_pretrained(base_model, device_map={"": 0}, trust_remote_code=True)
     elif quant8:
         quant_config = BitsAndBytesConfig(
             load_in_8bit=True,
@@ -120,7 +120,7 @@ def main():
             bnb_8bit_use_double_quant=False
         )
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0})
+        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0}, trust_remote_code=True)
     else:
         # Set up quantization config
         quant_config = BitsAndBytesConfig(
@@ -130,7 +130,7 @@ def main():
             bnb_4bit_use_double_quant=True,
         )
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0})
+        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0}, trust_remote_code=True)
     
     model.config.use_cache = False
     model.config.pretraining_tp = 1
@@ -162,6 +162,7 @@ def main():
         report_to=None,
         remove_unused_columns=False,
         beta=0.1, # the lambda/alpha hyperparameter in the paper/code
+        target_modules='all-linear',
     )
 
     trainer = ORPOTrainer(
