@@ -51,7 +51,8 @@ def create_prompts(dataset, tokenizer, base_dataset_rank_field, base_dataset_par
             # Turn this into LLaMa3 format
             try:
                 threads.append({'text': tokenizer.apply_chat_template(thread, tokenize=False, chat_template=chat_template)})
-            except:
+            except Exception as e:
+                print(f"ERROR: {e}")
                 print(thread)
                 import sys
                 sys.exit(0)
