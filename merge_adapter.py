@@ -17,12 +17,12 @@ def main():
     model_name = args.model_name
     force_cpu = args.cpu
     device = torch.device("cuda:0" if torch.cuda.is_available() and not (force_cpu) else "cpu")
-    output_model = args.output_model
+    output_model = args.output_name
     
     # Load the model and merge with base
-    model = AutoPeftModelForCausalLM.from_pretrained(model_name, device_map=device, torch_dtype=torch.bfloat16)
+    model = AutoPeftModelForCausalLM.from_pretrained(model_name, device_map=device, torch_dtype=torch.bfloat16, trust_remote_code=True)
     model = model.merge_and_unload()
-    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name, trust_remote_code=True)
 
     if os.path.isdir(output_model):
         model.save_to_disk(output_model)
