@@ -53,7 +53,7 @@ def main():
     chrf = CHRF()
 
     # Handle the models
-    models = [m for m in included_models.lower().split(",") if m in allowed_models]
+    models = [m.strip() for m in included_models.lower().split(",") if m.strip() in allowed_models]
     print(f"[---- LLaMa2Lang ----] Starting benchmarking from {source_language} to {target_language} for models {models} on {n} records on device {device}")
 
     # Load the OPUS dataset
