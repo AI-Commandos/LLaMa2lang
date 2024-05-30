@@ -51,6 +51,8 @@ def main():
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
     parser.add_argument('--padding', type=str, default="left",
                         help='What padding to use, can be either left or right.')
+    parser.add_argument('--cpu', action='store_true',
+                        help="Forces usage of CPU. By default GPU is taken if available.")
     
     args = parser.parse_args()
     base_model = args.base_model
@@ -70,6 +72,8 @@ def main():
     threads_output_name = args.threads_output_name
     thread_template_file = args.thread_template
     padding = args.padding
+    force_cpu = args.force_cpu
+    device = torch.device("cuda:0" if torch.cuda.is_available() and not (force_cpu) else "cpu")
 
     # Check for HF_TOKEN
     if 'HF_TOKEN' not in os.environ:
@@ -111,7 +115,7 @@ def main():
 
     if noquant:
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, device_map={"": 0}, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(base_model, device_map=device, trust_remote_code=True)
     elif quant8:
         quant_config = BitsAndBytesConfig(
             load_in_8bit=True,
@@ -120,7 +124,7 @@ def main():
             bnb_8bit_use_double_quant=False
         )
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0}, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map=device, trust_remote_code=True)
     else:
         # Set up quantization config
         quant_config = BitsAndBytesConfig(
@@ -130,7 +134,7 @@ def main():
             bnb_4bit_use_double_quant=True,
         )
         # Load base model
-        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map={"": 0}, trust_remote_code=True)
+        model = AutoModelForCausalLM.from_pretrained(base_model, quantization_config=quant_config, device_map=device, trust_remote_code=True)
 
     model.config.use_cache = False
     model.config.pretraining_tp = 1
