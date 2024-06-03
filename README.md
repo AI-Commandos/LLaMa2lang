@@ -4,6 +4,8 @@
 # LLaMa2lang v0.6
 This repository contains convenience scripts to finetune LLaMa3-8B (or any other foundation model) for chat towards any language (that isn't English). The rationale behind this is that LLaMa3 is trained on primarily English data and while it works to some extent for other languages, its performance is poor compared to English.
 
+Combine the power of fine-tuning with the power of RAG - check out our [RAG Me Up repository](https://github.com/UnderstandLingBV/RAGMeUp) on RAG which can be used on top of your models tuned with LLaMa2Lang.
+
 # TL;DR
 
 ```
