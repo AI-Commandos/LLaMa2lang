@@ -419,4 +419,4 @@ Make sure you have access to Meta's [LLaMa3-8B model](https://huggingface.co/met
 * A: Absolutely, we think it might even increase performance to have translation done by multiple models. You can achieve this by early-stopping a translation and continuing from the checkpoints by reruning the translate script with a different translation model.
 
 # Funding
-We are actively looking for funding to democratize AI and advance its applications. Contact us at funding@understandling.com if you want to invest.
+We are actively looking for funding to democratize AI and advance its applications. Contact us at info@commandos.ai if you want to invest.
