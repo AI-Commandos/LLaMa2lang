@@ -51,7 +51,7 @@ def main():
                         help='A file containing the thread template to use. Default is threads/template_fefault.txt')
     parser.add_argument('--padding', type=str, default="left",
                         help='What padding to use, can be either left or right.')
-    parser.add_argument('--cpu', action='store_true',
+    parser.add_argument('--force_cpu', action='store_true',
                         help="Forces usage of CPU. By default GPU is taken if available.")
     
     args = parser.parse_args()
